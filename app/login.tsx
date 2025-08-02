@@ -1,6 +1,22 @@
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Dimensions, Image, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  Dimensions,
+  Image,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
+} from 'react-native';
+import AuthService from '../src/api/AuthService';
+import { ApiListener } from '../src/api/ServiceProvider';
 
 const { width, height } = Dimensions.get('window');
 
@@ -8,10 +24,84 @@ export default function LoginScreen() {
   const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
-  const handleLogin = () => {
-    // Add your login logic here
-    console.log('Login attempted with:', { userId, password });
+  const validateInputs = (): boolean => {
+    if (!userId.trim()) {
+      Alert.alert('Error', 'Please enter your user ID');
+      return false;
+    }
+    if (!password.trim()) {
+      Alert.alert('Error', 'Please enter your password');
+      return false;
+    }
+    return true;
+  };
+
+  const handleLogin = async () => {
+    if (!validateInputs()) return;
+
+    setIsLoading(true);
+
+    const listener: ApiListener = {
+      onRequestStarted: () => {
+        console.log('Login request started');
+      },
+      onRequestSuccess: async (response, data, tag) => {
+        console.log('Login successful:', data);
+        try {
+          // Store tokens if they exist in the response
+          const responseData = JSON.parse(data);
+          if (responseData.token) {
+            await AsyncStorage.setItem('accessToken', responseData.token);
+          }
+          if (responseData.refreshToken) {
+            await AsyncStorage.setItem('refreshToken', responseData.refreshToken);
+          }
+          
+          // Navigate to home screen
+          router.replace('/home');
+        } catch (error) {
+          console.error('Error storing tokens:', error);
+          // Still navigate even if token storage fails
+          router.replace('/home');
+        }
+      },
+      onRequestFailure: (error, message, errors, tag) => {
+        console.log('Login failed:', message);
+        Alert.alert(
+          'Login Failed', 
+          message || 'Invalid credentials. Please try again.',
+          [{ text: 'OK' }]
+        );
+      },
+      onRequestEnded: () => {
+        setIsLoading(false);
+      },
+      onError: (response, message, tag) => {
+        console.log('Login error:', message);
+        Alert.alert(
+          'Login Error', 
+          message || 'An error occurred during login. Please try again.',
+          [{ text: 'OK' }]
+        );
+        setIsLoading(false);
+      }
+    };
+
+    try {
+      const authService = new AuthService();
+      await authService.login(userId.trim(), password, listener);
+    } catch (error) {
+      console.error('Login error:', error);
+      Alert.alert(
+        'Login Error', 
+        'An unexpected error occurred. Please try again.',
+        [{ text: 'OK' }]
+      );
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -52,6 +142,7 @@ export default function LoginScreen() {
             value={userId}
             onChangeText={setUserId}
             autoCapitalize="none"
+            editable={!isLoading}
           />
         </View>
 
@@ -66,10 +157,12 @@ export default function LoginScreen() {
             onChangeText={setPassword}
             secureTextEntry={!showPassword}
             autoCapitalize="none"
+            editable={!isLoading}
           />
           <TouchableOpacity
             onPress={() => setShowPassword(!showPassword)}
             style={styles.eyeIcon}
+            disabled={isLoading}
           >
             <Ionicons 
               name={showPassword ? "eye-off" : "eye"} 
@@ -81,12 +174,20 @@ export default function LoginScreen() {
       </View>
 
       {/* Login Button */}
-      <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-        <Text style={styles.loginButtonText}>Log In</Text>
+      <TouchableOpacity 
+        style={[styles.loginButton, isLoading && styles.loginButtonDisabled]} 
+        onPress={handleLogin}
+        disabled={isLoading}
+      >
+        {isLoading ? (
+          <ActivityIndicator color="#ffffff" size="small" />
+        ) : (
+          <Text style={styles.loginButtonText}>Log In</Text>
+        )}
       </TouchableOpacity>
 
              {/* Forgot Password */}
-       <TouchableOpacity style={styles.forgotPasswordContainer}>
+       <TouchableOpacity style={styles.forgotPasswordContainer} disabled={isLoading}>
          <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
        </TouchableOpacity>
      </ScrollView>
@@ -171,6 +272,9 @@ const styles = StyleSheet.create({
   paddingHorizontal: 20, // optional, for less width
   alignItems: 'center',
   marginBottom: 20,
+},
+loginButtonDisabled: {
+  backgroundColor: '#bdc3c7',
 },
 loginButtonText: {
   color: '#ffffff',

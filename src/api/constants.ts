@@ -1,31 +1,31 @@
-// src/api/constants.js
+// src/api/constants.ts
 
 // Base URLs for different environments
-export const BASE_URL = "http://192.168.0.180/WS01_BOP/api/";
+export const BASE_URL: string = "http://192.168.0.180/WS01_BOP/api/";
 // export const BASE_URL = "https://119.156.195.76/WS01_BOP/api/";
 // export const BASE_URL = "https://uat.ninjahr.ai/";
 
 // API Configuration
-export const API_KEY = "234637d35a0d44db1bfec15a53c453e3";
+export const API_KEY: string = "234637d35a0d44db1bfec15a53c453e3";
 
 // API Endpoints
 export const ENDPOINTS = {
   AUTH: {
     REFRESH_TOKEN: 'api/auth/refresh',
-    LOGIN: 'api/auth/login',
+    LOGIN: 'PostVerifyLogin',
     LOGOUT: 'api/auth/logout',
   },
   USER: {
     PROFILE: 'api/user/profile',
     UPDATE_PROFILE: 'api/user/update',
   },
-};
+} as const;
 
 // Request Timeouts
 export const TIMEOUTS = {
   REQUEST: 60000, // 60 seconds
   UPLOAD: 300000, // 5 minutes
-};
+} as const;
 
 // HTTP Status Codes
 export const HTTP_STATUS = {
@@ -37,4 +37,11 @@ export const HTTP_STATUS = {
   NOT_FOUND: 404,
   TOO_MANY_REQUESTS: 429,
   INTERNAL_SERVER_ERROR: 500,
-};
+} as const;
+
+// Type definitions for better type safety
+export type EndpointKey = keyof typeof ENDPOINTS;
+export type AuthEndpointKey = keyof typeof ENDPOINTS.AUTH;
+export type UserEndpointKey = keyof typeof ENDPOINTS.USER;
+export type HttpStatusValue = typeof HTTP_STATUS[keyof typeof HTTP_STATUS];
+export type TimeoutKey = keyof typeof TIMEOUTS; 

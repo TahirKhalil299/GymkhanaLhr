@@ -1,18 +1,44 @@
-// src/api/ServiceProvider.js
+// src/api/ServiceProvider.ts
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ApiService from './ApiService';
 import { RequestType } from './RequestTypes';
 import { HTTP_STATUS } from './constants';
 import Response from './utils/Response';
-import { showAlert } from './utils/alerts'; // You'll need to implement this
+import { showAlert } from './utils/alerts';
 
-class ServiceProvider {
-  constructor() {
-    this.currentRequest = null;
-  }
+// Type definitions
+export interface ApiListener {
+  onRequestStarted?: () => void;
+  onRequestSuccess?: (response: Response, data: string, tag: string) => void;
+  onRequestFailure?: (error: string, message: string, errors: any[], tag: string) => void;
+  onRequestEnded?: () => void;
+  onError?: (response: Response, message: string, tag: string) => void;
+  onRefreshSuccess?: () => void;
+  onRefreshFailure?: () => void;
+}
 
-  async sendApiCall(requestPromise, tag, listener) {
+export interface ApiResponse {
+  status: number;
+  statusText: string;
+  data: any;
+}
+
+export interface RefreshTokenResponse {
+  status: number;
+  data: {
+    accessToken: string;
+  };
+}
+
+export default class ServiceProvider {
+  protected currentRequest: any = null;
+
+  async sendApiCall(
+    requestPromise: Promise<ApiResponse>, 
+    tag: string, 
+    listener?: ApiListener
+  ): Promise<void> {
     try {
       listener?.onRequestStarted?.();
       
@@ -24,14 +50,31 @@ class ServiceProvider {
       } else {
         this.handleErrorResponse(response, tag, listener);
       }
-    } catch (error) {
+    } catch (error: any) {
       this.handleFailure(error, tag, listener);
     } finally {
       listener?.onRequestEnded?.();
     }
   }
 
-  handleErrorResponse(response, tag, listener) {
+  // Generic request method that can be used by subclasses
+  protected async request(
+    method: 'get' | 'post' | 'put' | 'delete' | 'patch',
+    endpoint: string,
+    data?: any,
+    tag?: string,
+    listener?: ApiListener
+  ): Promise<any> {
+    const requestPromise = ApiService[method](endpoint, data);
+    await this.sendApiCall(requestPromise, tag || endpoint, listener);
+    return requestPromise;
+  }
+
+  protected handleErrorResponse(
+    response: ApiResponse, 
+    tag: string, 
+    listener?: ApiListener
+  ): void {
     console.error(`API Error - ${response.status}: ${response.statusText}`, response.data);
     
     const errorResponse = new Response(response.data);
@@ -72,14 +115,20 @@ class ServiceProvider {
     }
   }
 
-  handleBadRequest(tag, listener, response) {
-    listener?.onError?.(response, response.StatusDesc, tag);
+  protected handleBadRequest(
+    tag: string, 
+    listener?: ApiListener, 
+    response?: Response
+  ): void {
+    if (response) {
+      listener?.onError?.(response, response.StatusDesc, tag);
+    }
     if (tag === RequestType.REFRESH_TOKEN) {
       this.showResetPreferencesDialog();
     }
   }
 
-  handleUnauthorizedRequest(tag, listener) {
+  protected handleUnauthorizedRequest(tag: string, listener?: ApiListener): void {
     if (tag === RequestType.REFRESH_TOKEN) {
       this.showResetPreferencesDialog();
     } else {
@@ -87,12 +136,12 @@ class ServiceProvider {
     }
   }
 
-  async refreshTokenAndRetry(tag, listener) {
+  private async refreshTokenAndRetry(tag: string, listener?: ApiListener): Promise<void> {
     try {
       const refreshToken = await AsyncStorage.getItem('refreshToken');
       if (!refreshToken) throw new Error('No refresh token');
       
-      const response = await ApiService.refreshToken({ token: refreshToken });
+      const response: RefreshTokenResponse = await ApiService.refreshToken({ token: refreshToken });
       if (response.status === HTTP_STATUS.OK) {
         await AsyncStorage.setItem('accessToken', response.data.accessToken);
         // You might want to retry the original request here
@@ -107,7 +156,7 @@ class ServiceProvider {
     }
   }
 
-  showResetPreferencesDialog() {
+  private showResetPreferencesDialog(): void {
     showAlert(
       'Session Expired',
       'Your session has expired. Please log in again.',
@@ -118,7 +167,7 @@ class ServiceProvider {
     );
   }
 
-  async resetAppPreferences() {
+  private async resetAppPreferences(): Promise<void> {
     try {
       await AsyncStorage.clear();
       // Navigate to login screen
@@ -128,7 +177,7 @@ class ServiceProvider {
     }
   }
 
-  handleFailure(error, tag, listener) {
+  private handleFailure(error: any, tag: string, listener?: ApiListener): void {
     if (error.name === 'NoConnectivityError') {
       showAlert('Connection Error', error.message);
       return;
@@ -145,7 +194,7 @@ class ServiceProvider {
     );
   }
 
-  cancelCurrentRequest() {
+  cancelCurrentRequest(): void {
     if (this.currentRequest) {
       // Cancel the request using axios cancel token if needed
       console.log('Cancelling current request');
@@ -154,4 +203,5 @@ class ServiceProvider {
   }
 }
 
-export default new ServiceProvider();
+// Export a singleton instance for backward compatibility
+export const serviceProvider = new ServiceProvider(); 

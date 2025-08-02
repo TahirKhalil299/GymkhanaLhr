@@ -1,4 +1,4 @@
-// src/api/errors/NoConnectivityError.js
+// src/api/errors/NoConnectivityError.ts
 
 class NoConnectivityError extends Error {
   constructor() {
@@ -8,4 +8,4 @@ class NoConnectivityError extends Error {
   }
 }
 
-export default NoConnectivityError;
+export default NoConnectivityError; 

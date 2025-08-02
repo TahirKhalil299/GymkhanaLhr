@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image, TextInput, TouchableOpacity, Dimensions, ScrollView, StatusBar } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import React, { useState } from 'react';
+import { Dimensions, Image, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
 
@@ -27,18 +27,18 @@ export default function LoginScreen() {
       {/* Logo Section */}
       <View style={styles.logoContainer}>
         <Image
-          source={require('../assets/images/logo.png')}
-          style={styles.logo}
+          source={require('../assets/images/logo_transparent.png')}
+       style={[styles.logo, { width: 200, height: 100 }]}
           resizeMode="contain"
         />
-        <Text style={styles.logoText}>LAHORE GYMKHANA</Text>
+       
       </View>
 
-      {/* Welcome Text */}
-      <View style={styles.welcomeContainer}>
-        <Text style={styles.welcomeText}>Welcome back,</Text>
-        <Text style={styles.loginText}>Log In</Text>
-      </View>
+    {/* Welcome Text Section with NativeWind-like styling */}
+        <View style={{ marginBottom: 40 }}>
+          <Text style={{ fontSize: 24,fontWeight: 'bold' ,color: '##000' }}>Welcome back,</Text>
+          <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#000' }}>Log In</Text>
+        </View>
 
       {/* Input Fields */}
       <View style={styles.inputContainer}>
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
     borderColor: '#e0e0e0',
     borderRadius: 8,
     paddingHorizontal: 15,
-    paddingVertical: 15,
+    paddingVertical: 8,
     marginBottom: 15,
     backgroundColor: '#fafafa',
   },
@@ -156,29 +156,32 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 13,
     color: '#000',
+  paddingVertical: 0,   // unnecessary height hatane ke liye
+  paddingHorizontal: 0,
   },
   eyeIcon: {
     padding: 5,
   },
   loginButton: {
-    backgroundColor: '#e74c3c',
-    borderRadius: 8,
-    paddingVertical: 15,
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  loginButtonText: {
-    color: '#ffffff',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
+  backgroundColor: '#e74c3c',
+  borderRadius: 8,
+  paddingVertical: 10, // reduced from 15
+  paddingHorizontal: 20, // optional, for less width
+  alignItems: 'center',
+  marginBottom: 20,
+},
+loginButtonText: {
+  color: '#ffffff',
+  fontSize: 16,// reduced from 18
+  fontWeight: 'bold',
+},
   forgotPasswordContainer: {
     alignItems: 'flex-end',
   },
   forgotPasswordText: {
     color: '#666',
-    fontSize: 14,
+    fontSize: 12,
   },
 }); 

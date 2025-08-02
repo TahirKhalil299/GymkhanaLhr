@@ -4,39 +4,34 @@
     "slug": "GymKhanaLhr",
     "version": "1.0.0",
     "orientation": "portrait",
-   "icon": "./assets/images/logo.png",
+    "icon": "./assets/images/logo.png",
     "scheme": "gymkhanalhr",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "icon": "./assets/images/logo.png" // Optional: iOS-specific version
     },
-          "android": {
-        "adaptiveIcon": {
-          "foregroundImage": "./assets/images/logo.png",
-          "backgroundColor": "#ffffff"
-        },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png", // Should be a square icon with transparent background
+        "backgroundColor": "#ffffff"
+      },
+      "icon": "./assets/images/logo.png", // Fallback
       "edgeToEdgeEnabled": true
     },
     "web": {
-      "bundler": "metro",
-      "output": "static",
-              "favicon": "./assets/images/logo.png"
+      "favicon": "./assets/images/favicon.png" // Smaller version (32x32 or 64x64)
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/logo.png",
-          "imageWidth": 200,
+          "image": "./assets/images/logo.png", // Dedicated splash screen image
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
       ]
-    ],
-    "experiments": {
-      "typedRoutes": true
-    }
+    ]
   }
 }

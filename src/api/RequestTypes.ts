@@ -1,5 +1,7 @@
 enum RequestType {
-  POST_VERIFY_LOGIN = 'POST_VERIFY_LOGIN',
+  LOGIN = 'POST_VERIFY_LOGIN',
+  LOGOUT = 'LOGOUT',
+  REFRESH_TOKEN = 'REFRESH_TOKEN',
   // Add other request types as needed
 }
 

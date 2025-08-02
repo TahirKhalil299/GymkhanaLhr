@@ -1,9 +1,7 @@
-import { RequestType } from './RequestTypes';
-import ServiceProvider from './ServiceProvider';
-import LoginPayload from './models/LoginPayload';
-import LoginResponse from './models/LoginResponse';
-import { ApiListener } from './ServiceProvider';
+import RequestType from './RequestTypes';
+import ServiceProvider, { ApiListener } from './ServiceProvider';
 import { ENDPOINTS } from './constants';
+import LoginResponse from './models/LoginResponse';
 
 export default class AuthService extends ServiceProvider {
   async login(

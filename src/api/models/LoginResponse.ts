@@ -1,41 +1,55 @@
-// src/api/models/LoginResponse.ts
-
-interface LoginResponseData {
-  success?: boolean;
-  message?: string;
-  token?: string;
-  refreshToken?: string;
-  user?: {
-    id: string;
-    name: string;
-    email: string;
-  };
+export interface ILoginResponse {
+  StatusDesc: string;
+  StatusCode: string;
+  data?: IUserData;
 }
 
-export default class LoginResponse {
-  public success: boolean;
-  public message: string;
-  public token: string | null;
-  public refreshToken: string | null;
-  public user: any | null;
+export interface IUserData {
+  C_User_ID?: string;
+  C_Email?: string;
+  C_Title?: string;
+  C_Name?: string;
+  C_FName?: string;
+  C_Add1?: string;
+  C_City?: string;
+  C_Province?: string;
+  C_Country?: string;
+  C_Tel_Mobile?: string;
+  C_Gender?: string;
+  CType?: string;
+  C_ITypeID?: string;
+  CStatus?: string;
+  C_Nationality?: string;
+  C_Occupation_Cat?: string;
+  C_Occupation?: string;
+  C_DOB?: string;
+  C_BirthPlace?: string;
+  C_IType_Expiry?: string;
+  C_Complete?: string;
+  C_ITypeRef?: string;
+  Img_D?: string;
+}
 
-  constructor(data: LoginResponseData) {
-    this.success = data.success || false;
-    this.message = data.message || '';
-    this.token = data.token || null;
-    this.refreshToken = data.refreshToken || null;
-    this.user = data.user || null;
+export default class LoginResponse implements ILoginResponse {
+  StatusDesc: string;
+  StatusCode: string;
+  data?: IUserData;
+
+  constructor(data: ILoginResponse) {
+    this.StatusDesc = data.StatusDesc || '';
+    this.StatusCode = data.StatusCode || '';
+    this.data = data.data || null;
   }
 
-  isSuccessful(): boolean {
-    return this.success === true;
+  isSuccess(): boolean {
+    return this.StatusDesc === 'Success';
   }
 
-  hasToken(): boolean {
-    return !!this.token;
+  getUserData(): IUserData | null {
+    return this.data || null;
   }
 
-  getUserData(): any {
-    return this.user;
+  getStatusMessage(): string {
+    return this.StatusDesc || 'Unknown status';
   }
 }

@@ -1,10 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Dimensions,
   Image,
   ScrollView,
@@ -15,8 +13,11 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import CustomAlertDialog from '../components/CustomAlertDialog';
 import AuthService from '../src/api/AuthService';
 import { ApiListener } from '../src/api/ServiceProvider';
+import LoginResponse from '../src/api/models/LoginResponse';
+import { UserDataManager } from '../utils/userDataManager';
 
 const { width, height } = Dimensions.get('window');
 
@@ -25,15 +26,36 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [alertDialog, setAlertDialog] = useState({
+    visible: false,
+    title: '',
+    message: ''
+  });
   const router = useRouter();
+
+  const showStatusDialog = (message: string) => {
+    setAlertDialog({
+      visible: true,
+      title: 'Alert!',
+      message: message
+    });
+  };
+
+  const hideAlertDialog = () => {
+    setAlertDialog({
+      visible: false,
+      title: '',
+      message: ''
+    });
+  };
 
   const validateInputs = (): boolean => {
     if (!userId.trim()) {
-      Alert.alert('Error', 'Please enter your user ID');
+      showStatusDialog('Please enter your user ID');
       return false;
     }
     if (!password.trim()) {
-      Alert.alert('Error', 'Please enter your password');
+      showStatusDialog('Please enter your password');
       return false;
     }
     return true;
@@ -51,41 +73,45 @@ export default function LoginScreen() {
       onRequestSuccess: async (response, data, tag) => {
         console.log('Login successful:', data);
         try {
-          // Store tokens if they exist in the response
+          // Parse the response data
           const responseData = JSON.parse(data);
-          if (responseData.token) {
-            await AsyncStorage.setItem('accessToken', responseData.token);
-          }
-          if (responseData.refreshToken) {
-            await AsyncStorage.setItem('refreshToken', responseData.refreshToken);
-          }
+          const loginResponse = new LoginResponse(responseData);
           
-          // Navigate to home screen
-          router.replace('/home');
+          // Check if StatusDesc is Success
+          if (loginResponse.isSuccess()) {
+            // Store user data if available
+            const userData = loginResponse.getUserData();
+            if (userData) {
+              await UserDataManager.saveUserData(userData);
+            }
+            
+            // Store tokens if they exist in the response
+            await UserDataManager.saveTokens(
+              responseData.token,
+              responseData.refreshToken
+            );
+            
+            // Navigate to home screen
+            router.replace('/home');
+          } else {
+            // Show error dialog with StatusDesc
+            showStatusDialog(loginResponse.getStatusMessage());
+          }
         } catch (error) {
-          console.error('Error storing tokens:', error);
-          // Still navigate even if token storage fails
-          router.replace('/home');
+          console.error('Error processing login response:', error);
+          showStatusDialog('An error occurred while processing the response. Please try again.');
         }
       },
       onRequestFailure: (error, message, errors, tag) => {
         console.log('Login failed:', message);
-        Alert.alert(
-          'Login Failed', 
-          message || 'Invalid credentials. Please try again.',
-          [{ text: 'OK' }]
-        );
+        showStatusDialog(message || 'Login failed. Please check your credentials and try again.');
       },
       onRequestEnded: () => {
         setIsLoading(false);
       },
       onError: (response, message, tag) => {
         console.log('Login error:', message);
-        Alert.alert(
-          'Login Error', 
-          message || 'An error occurred during login. Please try again.',
-          [{ text: 'OK' }]
-        );
+        showStatusDialog(message || 'An error occurred during login. Please try again.');
         setIsLoading(false);
       }
     };
@@ -95,11 +121,7 @@ export default function LoginScreen() {
       await authService.login(userId.trim(), password, listener);
     } catch (error) {
       console.error('Login error:', error);
-      Alert.alert(
-        'Login Error', 
-        'An unexpected error occurred. Please try again.',
-        [{ text: 'OK' }]
-      );
+      showStatusDialog('An unexpected error occurred. Please try again.');
       setIsLoading(false);
     }
   };
@@ -191,6 +213,15 @@ export default function LoginScreen() {
          <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
        </TouchableOpacity>
      </ScrollView>
+
+     {/* Custom Alert Dialog */}
+     <CustomAlertDialog
+       visible={alertDialog.visible}
+       title={alertDialog.title}
+       message={alertDialog.message}
+       okButtonText="OK"
+       onOkClick={hideAlertDialog}
+     />
     </View>
   );
 }

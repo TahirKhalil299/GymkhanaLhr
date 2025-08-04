@@ -75,25 +75,51 @@ export default function LoginScreen() {
         try {
           // Parse the response data
           const responseData = JSON.parse(data);
+          console.log('Parsed response data:', responseData);
+          
           const loginResponse = new LoginResponse(responseData);
+          console.log('Login response StatusDesc:', loginResponse.getStatusMessage());
+          console.log('Is success:', loginResponse.isSuccess());
           
           // Check if StatusDesc is Success
           if (loginResponse.isSuccess()) {
+            console.log('Login successful, storing data...');
+            
             // Store user data if available
             const userData = loginResponse.getUserData();
             if (userData) {
-              await UserDataManager.saveUserData(userData);
+              console.log('Saving user data:', userData);
+              try {
+                await UserDataManager.saveUserData(userData);
+                console.log('User data saved successfully');
+              } catch (saveError) {
+                console.error('Error saving user data:', saveError);
+              }
             }
             
             // Store tokens if they exist in the response
-            await UserDataManager.saveTokens(
-              responseData.token,
-              responseData.refreshToken
-            );
+            console.log('Saving tokens...');
+            try {
+              await UserDataManager.saveTokens(
+                responseData.token,
+                responseData.refreshToken
+              );
+              console.log('Tokens saved successfully');
+            } catch (tokenError) {
+              console.error('Error saving tokens:', tokenError);
+            }
             
-            // Navigate to home screen
-            router.replace('/home');
+            console.log('Navigating to home screen...');
+            try {
+              // Navigate to home screen
+              await router.replace('/home');
+              console.log('Navigation completed successfully');
+            } catch (navError) {
+              console.error('Navigation error:', navError);
+              showStatusDialog('Navigation failed. Please try again.');
+            }
           } else {
+            console.log('Login failed, showing error dialog');
             // Show error dialog with StatusDesc
             showStatusDialog(loginResponse.getStatusMessage());
           }
@@ -107,6 +133,7 @@ export default function LoginScreen() {
         showStatusDialog(message || 'Login failed. Please check your credentials and try again.');
       },
       onRequestEnded: () => {
+        console.log('Request ended, setting loading to false');
         setIsLoading(false);
       },
       onError: (response, message, tag) => {

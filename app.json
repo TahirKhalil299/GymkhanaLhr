@@ -9,25 +9,26 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
-      "icon": "./assets/images/logo.png" // Optional: iOS-specific version
+      "icon": "./assets/images/logo.png"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png", // Should be a square icon with transparent background
+        "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "icon": "./assets/images/logo.png", // Fallback
-      "edgeToEdgeEnabled": true
+      "icon": "./assets/images/logo.png",
+      "edgeToEdgeEnabled": true,
+      "package": "com.anonymous.GymKhanaLhr"
     },
     "web": {
-      "favicon": "./assets/images/favicon.png" // Smaller version (32x32 or 64x64)
+      "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/logo.png", // Dedicated splash screen image
+          "image": "./assets/images/logo.png",
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }

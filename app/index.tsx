@@ -2,10 +2,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import React, { useEffect, useRef } from 'react';
 import {
-    Animated,
-    Dimensions,
-    StyleSheet,
-    View
+  Animated,
+  Dimensions,
+  StyleSheet,
+  View
 } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
@@ -124,12 +124,12 @@ export default function AuthSplashScreen() {
         ]}>
           GymKhanaLhr
         </Animated.Text>
-
+{/* 
         <View style={styles.loadingContainer}>
           <View style={styles.loadingDot} />
           <View style={styles.loadingDot} />
           <View style={styles.loadingDot} />
-        </View>
+        </View> */}
       </View>
 
       <View style={styles.footer}></View>

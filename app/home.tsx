@@ -1,35 +1,53 @@
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-  Alert,
-  Image,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View
+    Alert,
+    Image,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import AuthService from '../src/api/AuthService';
+import { UserDataManager } from '../utils/userDataManager';
 
 export default function HomeScreen() {
   const [userName, setUserName] = useState('User');
   const router = useRouter();
 
   useEffect(() => {
+    console.log('Home screen mounted');
     // Check if user is logged in
     checkAuthStatus();
   }, []);
 
   const checkAuthStatus = async () => {
     try {
-      const token = await AsyncStorage.getItem('accessToken');
-      if (!token) {
-        // No token found, redirect to login
+      console.log('Checking auth status...');
+      const isLoggedIn = await UserDataManager.isLoggedIn();
+      console.log('Is logged in:', isLoggedIn);
+      
+      // For debugging, let's also check individual components
+      const accessToken = await UserDataManager.getAccessToken();
+      const userData = await UserDataManager.getUserData();
+      console.log('Individual checks - accessToken exists:', !!accessToken, 'userData exists:', !!userData);
+      
+      if (!isLoggedIn) {
+        console.log('Not logged in, redirecting to login');
+        // No valid login found, redirect to login
         router.replace('/login');
         return;
+      }
+      
+      console.log('User is logged in, getting user data...');
+      // Get user data for display
+      console.log('User data:', userData);
+      
+      if (userData && userData.C_Name) {
+        setUserName(userData.C_Name);
       }
       
       // You can fetch user profile here if needed
@@ -57,15 +75,15 @@ export default function HomeScreen() {
               const authService = new AuthService();
               await authService.logout();
               
-              // Clear stored tokens
-              await AsyncStorage.multiRemove(['accessToken', 'refreshToken']);
+              // Clear stored tokens and user data
+              await UserDataManager.clearAllData();
               
               // Navigate back to login
               router.replace('/login');
             } catch (error) {
               console.error('Logout error:', error);
               // Still clear tokens and navigate even if logout API fails
-              await AsyncStorage.multiRemove(['accessToken', 'refreshToken']);
+              await UserDataManager.clearAllData();
               router.replace('/login');
             }
           },

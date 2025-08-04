@@ -6,6 +6,7 @@ import {
     StyleSheet,
     View
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { UserDataManager } from '../utils/userDataManager';
 
 const { width, height } = Dimensions.get('window');
@@ -20,6 +21,8 @@ export default function AuthSplashScreen() {
   const textTranslateYAnim = useRef(new Animated.Value(-400)).current;
   const textOpacityAnim = useRef(new Animated.Value(0)).current;
   const textScaleAnim = useRef(new Animated.Value(0.8)).current;
+
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     // Logo and text animations together with slower speed
@@ -99,7 +102,7 @@ export default function AuthSplashScreen() {
   }, [translateYAnim, opacityAnim, scaleXAnim, scaleYAnim, textTranslateYAnim, textOpacityAnim, textScaleAnim]);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
       <View style={styles.content}>
         <Animated.Image
           source={require('../assets/images/logo.png')}
@@ -129,12 +132,12 @@ export default function AuthSplashScreen() {
         ]}>
           GymKhanaLhr
         </Animated.Text>
-{/* 
-        <View style={styles.loadingContainer}>
-          <View style={styles.loadingDot} />
-          <View style={styles.loadingDot} />
-          <View style={styles.loadingDot} />
-        </View> */}
+  {/* 
+          <View style={styles.loadingContainer}>
+            <View style={styles.loadingDot} />
+            <View style={styles.loadingDot} />
+            <View style={styles.loadingDot} />
+          </View> */}
       </View>
 
       <View style={styles.footer}></View>

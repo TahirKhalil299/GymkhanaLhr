@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import CustomAlertDialog from '../components/CustomAlertDialog';
 import AuthService from '../src/api/AuthService';
 import { ApiListener } from '../src/api/ServiceProvider';
@@ -32,6 +33,7 @@ export default function LoginScreen() {
     message: ''
   });
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const showStatusDialog = (message: string) => {
     setAlertDialog({
@@ -71,11 +73,11 @@ export default function LoginScreen() {
         console.log('Login request started');
       },
       onRequestSuccess: async (response, data, tag) => {
-        console.log('Login successful:', data);
+        console.log('Login successful:');
         try {
           // Parse the response data
           const responseData = JSON.parse(data);
-          console.log('Parsed response data:', responseData);
+          console.log('Parsed response data:');
           
           const loginResponse = new LoginResponse(responseData);
           console.log('Login response StatusDesc:', loginResponse.getStatusMessage());
@@ -88,7 +90,7 @@ export default function LoginScreen() {
             // Store user data if available
             const userData = loginResponse.getUserData();
             if (userData) {
-              console.log('Saving user data:', userData);
+             console.log('Saving user data:');
               try {
                 await UserDataManager.saveUserData(userData);
                 console.log('User data saved successfully');
@@ -163,7 +165,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
       <ScrollView 
         style={styles.scrollView}
@@ -272,7 +274,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 30,
-    paddingTop: 60,
+    paddingTop: 40,
     paddingBottom: 100,
     minHeight: '100%',
   },

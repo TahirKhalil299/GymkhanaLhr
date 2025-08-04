@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Alert,
   Dimensions,
@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { UserDataManager } from '../utils/userDataManager';
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -29,7 +30,10 @@ interface Currency {
 
 export default function HomeScreen() {
   const [userName, setUserName] = useState('User');
+  const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const flatListRef = useRef<FlatList>(null);
 
   // Sample currency data - replace with your actual data
   const currencies: Currency[] = [
@@ -71,6 +75,24 @@ export default function HomeScreen() {
     console.log('Home screen mounted');
     checkAuthStatus();
   }, []);
+
+  // Auto-swipe functionality
+  useEffect(() => {
+    const autoSwipeInterval = setInterval(() => {
+      if (currencies.length > 0) {
+        const nextIndex = (currentCardIndex + 1) % currencies.length;
+        setCurrentCardIndex(nextIndex);
+        
+        // Scroll to the next card
+        flatListRef.current?.scrollToIndex({
+          index: nextIndex,
+          animated: true,
+        });
+      }
+    }, 2000); // 2 seconds interval
+
+    return () => clearInterval(autoSwipeInterval);
+  }, [currentCardIndex, currencies.length]);
 
   const checkAuthStatus = async () => {
     try {
@@ -124,15 +146,15 @@ export default function HomeScreen() {
               console.log('All data cleared');
               
               // Set login state to false
-            //  await UserDataManager.setLoginState(false);
+             //  await UserDataManager.setLoginState(false);
               console.log('Login state set to false');
               
               router.replace('/login');
             } catch (error) {
-            //  console.error('Logout error:', error);
+              // console.error('Logout error:', error);
               // Even if auth service fails, clear local data
               await UserDataManager.clearAllData();
-              await UserDataManager.setLoginState(false);
+              // await UserDataManager.setLoginState(false);
               router.replace('/login');
             }
           },
@@ -234,8 +256,15 @@ export default function HomeScreen() {
     </View>
   );
 
+  const handleScroll = (event: any) => {
+    const contentOffset = event.nativeEvent.contentOffset.x;
+    const cardWidth = screenWidth - 20;
+    const index = Math.floor(contentOffset / cardWidth);
+    setCurrentCardIndex(index);
+  };
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
       <StatusBar barStyle="dark-content" backgroundColor="#f8f9fa" />
       
       {/* Header */}
@@ -255,15 +284,24 @@ export default function HomeScreen() {
         {/* Currency Cards Horizontal Scroll */}
         <View style={styles.currencyContainer}>
           <FlatList
+            ref={flatListRef}
             data={currencies}
             renderItem={renderCurrencyCard}
             keyExtractor={(item) => item.id.toString()}
             horizontal
             showsHorizontalScrollIndicator={false}
             pagingEnabled
-            snapToInterval={screenWidth - 58} // Adjusted to match new card width
-            decelerationRate="fast"
+            snapToInterval={screenWidth - 20}
+            snapToAlignment="start"
+            decelerationRate={0.8}
             contentContainerStyle={styles.currencyFlatList}
+            getItemLayout={(data, index) => ({
+              length: screenWidth - 20,
+              offset: (screenWidth - 20) * index,
+              index,
+            })}
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
           />
         </View>
 
@@ -337,7 +375,7 @@ export default function HomeScreen() {
       </ScrollView>
 
       {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
+      <View style={[styles.bottomNav, { paddingBottom: insets.bottom > 0 ? insets.bottom : 15 }]}>
         <TouchableOpacity style={styles.navItem}>
           <Image
             source={require('../assets/images/deal-details.png')}
@@ -379,15 +417,15 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f0f0f0', // Slightly darker background to match Android
+    backgroundColor: '#f0f0f0',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 10,
+    paddingTop: 15,
+    paddingBottom: 15,
     backgroundColor: '#f0f0f0', // Match container background
   },
   headerLeft: {
@@ -414,14 +452,14 @@ const styles = StyleSheet.create({
     marginBottom: 30, // Increased spacing to match Android
   },
   currencyFlatList: {
-    paddingHorizontal: 25, // Increased padding
+    paddingHorizontal: 20,
   },
   currencyCard: {
     backgroundColor: '#4a5568',
     borderRadius: 16, // Increased border radius to match Android
     padding: 20,
-    marginRight: 12, // Reduced margin
-    width: screenWidth - 30, // Reduced width to fit better
+    marginRight: 20, // Add margin to separate cards
+    width: screenWidth - 40, // Full width minus horizontal padding
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -440,7 +478,7 @@ const styles = StyleSheet.create({
     width: 40, // Increased size to match Android
     height: 40,
     borderRadius: 20,
-    marginRight: 150,
+    marginRight: 15, // Reduced margin
   },
   currencyTextContainer: {
     flex: 1,
@@ -497,8 +535,7 @@ const styles = StyleSheet.create({
   },
   menuContainer: {
     paddingHorizontal: 20,
-    marginBottom: 100,
-    marginLeft: 8,
+    marginBottom: 100, // Fixed margin for bottom navigation
   },
   menuRow: {
     flexDirection: 'row',
@@ -523,8 +560,8 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   emptyMenuItem: {
-    width: 100, // Same size as menu item but invisible
-    height: 100,
+    width: 110, // Same size as menu item but invisible
+    height: 110,
   },
   menuIconContainer: {
     marginBottom:15 ,
@@ -549,8 +586,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    paddingVertical: 5,
-    paddingBottom: 0,
+    paddingVertical: 15, // Increased padding
     borderTopWidth: 1,
     borderTopColor: '#e2e8f0',
     shadowColor: '#000',

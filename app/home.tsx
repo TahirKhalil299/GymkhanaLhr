@@ -3,8 +3,8 @@ import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
   Alert,
-  Animated,
   Dimensions,
+  FlatList,
   Image,
   ScrollView,
   StatusBar,
@@ -13,63 +13,63 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
-import AuthService from '../src/api/AuthService';
 import { UserDataManager } from '../utils/userDataManager';
 
 const { width: screenWidth } = Dimensions.get('window');
 
+// Define the currency type
+interface Currency {
+  id: number;
+  code: string;
+  name: string;
+  flag: any;
+  buying: number;
+  selling: number;
+}
+
 export default function HomeScreen() {
   const [userName, setUserName] = useState('User');
-  const [currentCurrencyIndex, setCurrentCurrencyIndex] = useState(0);
   const router = useRouter();
-  const slideAnim = new Animated.Value(0);
 
   // Sample currency data - replace with your actual data
-  const currencies = [
+  const currencies: Currency[] = [
     {
+      id: 1,
       code: 'EUR',
       name: 'European E. Community',
-      flag: require('../assets/images/usa__flag.png'), // Add this image
+      flag: require('../assets/images/uk_flag.png'), // Use proper EUR flag
       buying: 335.00,
       selling: 337.85
     },
     {
+      id: 2,
       code: 'USD',
       name: 'United States Dollar',
-      flag: require('../assets/images/usa__flag.png'), // Add this image
+      flag: require('../assets/images/usa__flag.png'), // Use proper USA flag
       buying: 278.50,
       selling: 280.25
     },
     {
+      id: 3,
       code: 'GBP',
       name: 'British Pound Sterling',
-      flag: require('../assets/images/usa__flag.png'), // Add this image
+      flag: require('../assets/images/uk_flag.png'), // Use proper GBP flag
       buying: 354.75,
       selling: 357.20
+    },
+    {
+      id: 4,
+      code: 'CAD',
+      name: 'Canadian Dollar',
+      flag: require('../assets/images/uk_flag.png'), // Use proper CAD flag
+      buying: 205.30,
+      selling: 207.85
     }
   ];
 
   useEffect(() => {
     console.log('Home screen mounted');
     checkAuthStatus();
-
-    // Start currency carousel
-    const interval = setInterval(() => {
-      setCurrentCurrencyIndex((prevIndex) => {
-        const nextIndex = (prevIndex + 1) % currencies.length;
-
-        // Animate slide
-        Animated.timing(slideAnim, {
-          toValue: nextIndex * screenWidth,
-          duration: 500,
-          useNativeDriver: true,
-        }).start();
-
-        return nextIndex;
-      });
-    }, 2000);
-
-    return () => clearInterval(interval);
   }, []);
 
   const checkAuthStatus = async () => {
@@ -114,13 +114,25 @@ export default function HomeScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              const authService = new AuthService();
-              await authService.logout();
+              console.log('Logging out...');
+              // const authService = new AuthService();
+              // await authService.logout();
+              console.log('Auth service logout completed');
+              
+              // Clear all data and set login state to false
               await UserDataManager.clearAllData();
+              console.log('All data cleared');
+              
+              // Set login state to false
+            //  await UserDataManager.setLoginState(false);
+              console.log('Login state set to false');
+              
               router.replace('/login');
             } catch (error) {
-              console.error('Logout error:', error);
+            //  console.error('Logout error:', error);
+              // Even if auth service fails, clear local data
               await UserDataManager.clearAllData();
+              await UserDataManager.setLoginState(false);
               router.replace('/login');
             }
           },
@@ -182,79 +194,145 @@ export default function HomeScreen() {
     }
   ];
 
+  const renderCurrencyCard = ({ item }: { item: Currency }) => (
+    <View style={styles.currencyCard}>
+      {/* Header Section */}
+      <View style={styles.currencyHeader}>
+        <Image
+          source={item.flag}
+          style={styles.flagIcon}
+          resizeMode="contain"
+        />
+        <View style={styles.currencyTextContainer}>
+          <Text style={styles.currencyCode}>{item.code}</Text>
+          <Text style={styles.currencyName}>{item.name}</Text>
+        </View>
+      </View>
+
+      {/* Rates Section */}
+      <View style={styles.ratesContainer}>
+        {/* Buying Rate */}
+        <View style={styles.rateContainer}>
+          <View style={styles.buyingHeader}>
+            <Text style={styles.rateHeaderText}>Buying</Text>
+          </View>
+          <View style={styles.rateValueContainer}>
+            <Text style={styles.rateValueText}>{item.buying.toFixed(2)}</Text>
+          </View>
+        </View>
+
+        {/* Selling Rate */}
+        <View style={styles.rateContainer}>
+          <View style={styles.sellingHeader}>
+            <Text style={styles.rateHeaderText}>Selling</Text>
+          </View>
+          <View style={styles.rateValueContainer}>
+            <Text style={styles.rateValueText}>{item.selling.toFixed(2)}</Text>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#f8f9fa" />
-
+      
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.menuButton}>
-          <Ionicons name="menu" size={24} color="#333" />
-        </TouchableOpacity>
-        <Text style={styles.userName}>{userName}</Text>
+        <View style={styles.headerLeft}>
+          <TouchableOpacity style={styles.menuButton}>
+            <Ionicons name="menu" size={24} color="#333" />
+          </TouchableOpacity>
+          <Text style={styles.userName}>{userName.toUpperCase()}</Text>
+        </View>
         <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
           <Ionicons name="log-out-outline" size={24} color="#333" />
         </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Currency Card */}
+        {/* Currency Cards Horizontal Scroll */}
         <View style={styles.currencyContainer}>
-          <View style={styles.currencyCard}>
-            <View style={styles.currencyHeader}>
-              <View style={styles.currencyInfo}>
-                <Image
-                  source={currencies[currentCurrencyIndex].flag}
-                  style={styles.flagIcon}
-                  resizeMode="contain"
-                />
-                <View style={styles.currencyTextContainer}>
-                  <Text style={styles.currencyCode}>
-                    {currencies[currentCurrencyIndex].code}
-                  </Text>
-                  <Text style={styles.currencyName}>
-                    {currencies[currentCurrencyIndex].name}
-                  </Text>
-                </View>
-              </View>
-            </View>
-
-            <View style={styles.ratesContainer}>
-              <View style={styles.rateCard}>
-                <View style={styles.buyingRate}>
-                  <Text style={styles.rateLabel}>Buying</Text>
-                  <Text style={styles.rateValue}>
-                    {currencies[currentCurrencyIndex].buying.toFixed(2)}
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.rateCard}>
-                <View style={styles.sellingRate}>
-                  <Text style={styles.rateLabel}>Selling</Text>
-                  <Text style={styles.rateValue}>
-                    {currencies[currentCurrencyIndex].selling.toFixed(2)}
-                  </Text>
-                </View>
-              </View>
-            </View>
-          </View>
+          <FlatList
+            data={currencies}
+            renderItem={renderCurrencyCard}
+            keyExtractor={(item) => item.id.toString()}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            pagingEnabled
+            snapToInterval={screenWidth - 58} // Adjusted to match new card width
+            decelerationRate="fast"
+            contentContainerStyle={styles.currencyFlatList}
+          />
         </View>
 
-        {/* Menu Grid */}
-        <View style={styles.menuGrid}>
-          {menuItems.map((item, index) => (
-            <TouchableOpacity key={index} style={styles.menuItem}>
+        {/* Menu Grid - Updated to match Android layout */}
+        <View style={styles.menuContainer}>
+          {/* Row 1 */}
+          <View style={styles.menuRow}>
+            {menuItems.slice(0, 3).map((item, index) => (
+              <TouchableOpacity key={index} style={styles.menuItem}>
+                <View style={styles.menuIconContainer}>
+                  <Image
+                    source={item.image}
+                    style={styles.menuIcon}
+                    resizeMode="contain"
+                  />
+                </View>
+                <Text style={styles.menuText}>{item.title}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* Row 2 */}
+          <View style={styles.menuRow}>
+            {menuItems.slice(3, 6).map((item, index) => (
+              <TouchableOpacity key={index + 3} style={styles.menuItem}>
+                <View style={styles.menuIconContainer}>
+                  <Image
+                    source={item.image}
+                    style={styles.menuIcon}
+                    resizeMode="contain"
+                  />
+                </View>
+                <Text style={styles.menuText}>{item.title}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* Row 3 */}
+          <View style={styles.menuRow}>
+            {menuItems.slice(6, 9).map((item, index) => (
+              <TouchableOpacity key={index + 6} style={styles.menuItem}>
+                <View style={styles.menuIconContainer}>
+                  <Image
+                    source={item.image}
+                    style={styles.menuIcon}
+                    resizeMode="contain"
+                  />
+                </View>
+                <Text style={styles.menuText}>{item.title}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* Row 4 - Updated to match Android (3 items with empty spaces) */}
+          <View style={styles.menuRow}>
+            <TouchableOpacity style={styles.menuItem}>
               <View style={styles.menuIconContainer}>
                 <Image
-                  source={item.image}
+                  source={menuItems[9].image}
                   style={styles.menuIcon}
                   resizeMode="contain"
                 />
               </View>
-              <Text style={styles.menuText}>{item.title}</Text>
+              <Text style={styles.menuText}>{menuItems[9].title}</Text>
             </TouchableOpacity>
-          ))}
+            {/* Empty spaces to match Android layout */}
+            <View style={styles.emptyMenuItem} />
+            <View style={styles.emptyMenuItem} />
+          </View>
         </View>
       </ScrollView>
 
@@ -282,7 +360,7 @@ export default function HomeScreen() {
         <TouchableOpacity style={styles.navItem}>
           <Image
             source={require('../assets/images/book-deal.png')}
-            style={[styles.navIcon, { tintColor: '#000000' }]}
+            style={styles.navIcon}
             resizeMode="contain"
           />
         </TouchableOpacity>
@@ -301,40 +379,53 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#f0f0f0', // Slightly darker background to match Android
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 50,
-    paddingBottom: 20,
-    backgroundColor: '#f8f9fa',
+    paddingTop: 20,
+    paddingBottom: 10,
+    backgroundColor: '#f0f0f0', // Match container background
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  menuButton: {
+    padding: 8,
+    marginRight: 12,
   },
   userName: {
     fontSize: 18,
     fontWeight: '600',
     color: '#333',
+    letterSpacing: 0.5, // Add letter spacing for uppercase text
   },
   logoutButton: {
     padding: 8,
   },
   content: {
     flex: 1,
-    paddingHorizontal: 20,
   },
   currencyContainer: {
-    marginBottom: 30,
+    marginBottom: 30, // Increased spacing to match Android
+  },
+  currencyFlatList: {
+    paddingHorizontal: 25, // Increased padding
   },
   currencyCard: {
     backgroundColor: '#4a5568',
-    borderRadius: 16,
-    padding: 10,
+    borderRadius: 16, // Increased border radius to match Android
+    padding: 20,
+    marginRight: 12, // Reduced margin
+    width: screenWidth - 30, // Reduced width to fit better
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 5,
+      height: 4,
     },
     shadowOpacity: 0.15,
     shadowRadius: 8,
@@ -342,84 +433,86 @@ const styles = StyleSheet.create({
   },
   currencyHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 20,
   },
-  currencyInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
   flagIcon: {
-    width: 40,
+    width: 40, // Increased size to match Android
     height: 40,
-    marginRight: 12,
     borderRadius: 20,
+    marginRight: 150,
   },
   currencyTextContainer: {
     flex: 1,
+    alignItems: 'flex-end',
   },
   currencyCode: {
-    fontSize: 20,
+    fontSize: 14, // Increased font size
     fontWeight: 'bold',
     color: '#ffffff',
     marginBottom: 4,
   },
   currencyName: {
-    fontSize: 14,
+    fontSize: 12, // Increased font size
     color: '#cbd5e0',
+    textAlign: 'right',
   },
   ratesContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  rateCard: {
+  rateContainer: {
     flex: 1,
-    marginHorizontal: 5,
+    marginHorizontal: 7.5,
   },
-  buyingRate: {
+  buyingHeader: {
     backgroundColor: '#48bb78',
-    borderRadius: 12,
-    padding: 5,
-    alignItems: 'center',
+    borderTopLeftRadius: 8, // Increased border radius
+    borderTopRightRadius: 8,
+    paddingVertical: 6, // Increased padding
   },
-  sellingRate: {
+  sellingHeader: {
     backgroundColor: '#f56565',
-    borderRadius: 12,
-    padding: 5,
-    alignItems: 'center',
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8,
+    paddingVertical: 6,
   },
-  rateLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#ffffff',
-    marginBottom: 8,
-  },
-  rateValue: {
-    fontSize: 18,
+  rateHeaderText: {
+    fontSize: 11, // Increased font size
     fontWeight: 'bold',
     color: '#ffffff',
-    backgroundColor: '#ffffff',
-
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    minWidth: 80,
     textAlign: 'center',
   },
-  menuGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+  rateValueContainer: {
+    backgroundColor: '#ffffff',
+    borderBottomLeftRadius: 8,
+    borderBottomRightRadius: 8,
+    paddingVertical: 6, // Increased padding
+  },
+  rateValueText: {
+    fontSize: 12, // Increased font size
+    fontWeight: '600',
+    color: '#000000',
+    textAlign: 'center',
+  },
+  menuContainer: {
+    paddingHorizontal: 20,
     marginBottom: 100,
+    marginLeft: 8,
+  },
+  menuRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20, // Increased spacing between rows
   },
   menuItem: {
-    width: '30%',
+    width: 110, // Increased width to match Android
+    height: 110, // Increased height to match Android
     backgroundColor: '#ffffff',
     borderRadius: 16,
-    padding: 20,
+    padding: 2, // Increased padding
     alignItems: 'center',
-    marginBottom: 15,
+    justifyContent: 'center',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -427,21 +520,25 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3,
+    elevation: 5,
+  },
+  emptyMenuItem: {
+    width: 100, // Same size as menu item but invisible
+    height: 100,
   },
   menuIconContainer: {
-    marginBottom: 8,
+    marginBottom:15 ,
   },
   menuIcon: {
-    width: 27,
-    height: 27,
+    width: 24, // Increased icon size
+    height: 24,
   },
   menuText: {
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: 10, // Slightly increased font size
+    fontWeight: '600', // Changed from bold to semi-bold
     color: '#333',
     textAlign: 'center',
-    lineHeight: 15,
+    lineHeight: 13,
   },
   bottomNav: {
     position: 'absolute',
@@ -452,10 +549,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    paddingVertical: 15,
-    paddingBottom: 30,
+    paddingVertical: 5,
+    paddingBottom: 0,
     borderTopWidth: 1,
     borderTopColor: '#e2e8f0',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 10,
   },
   navItem: {
     alignItems: 'center',

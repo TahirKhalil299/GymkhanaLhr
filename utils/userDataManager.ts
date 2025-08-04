@@ -5,6 +5,7 @@ export class UserDataManager {
   private static readonly USER_DATA_KEY = 'userData';
   private static readonly ACCESS_TOKEN_KEY = 'accessToken';
   private static readonly REFRESH_TOKEN_KEY = 'refreshToken';
+  private static readonly IS_LOGGED_IN_KEY = 'isLoggedIn';
 
   static async saveUserData(userData: IUserData): Promise<void> {
     try {
@@ -73,13 +74,44 @@ export class UserDataManager {
     }
   }
 
+  static async setLoginState(isLoggedIn: boolean): Promise<void> {
+    try {
+      console.log('UserDataManager: Setting login state to:', isLoggedIn);
+      await AsyncStorage.setItem(this.IS_LOGGED_IN_KEY, JSON.stringify(isLoggedIn));
+      console.log('UserDataManager: Login state saved successfully');
+    } catch (error) {
+      console.error('Error saving login state:', error);
+      throw error;
+    }
+  }
+
+  static async getLoginState(): Promise<boolean> {
+    try {
+      console.log('UserDataManager: Getting login state...');
+      const loginStateString = await AsyncStorage.getItem(this.IS_LOGGED_IN_KEY);
+      console.log('UserDataManager: Login state string retrieved:', loginStateString);
+      if (loginStateString) {
+        const isLoggedIn = JSON.parse(loginStateString);
+        console.log('UserDataManager: Parsed login state:', isLoggedIn);
+        return isLoggedIn;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error getting login state:', error);
+      return false;
+    }
+  }
+
   static async clearAllData(): Promise<void> {
     try {
+      console.log('UserDataManager: Clearing all data...');
       await AsyncStorage.multiRemove([
         this.USER_DATA_KEY,
         this.ACCESS_TOKEN_KEY,
-        this.REFRESH_TOKEN_KEY
+        this.REFRESH_TOKEN_KEY,
+        this.IS_LOGGED_IN_KEY
       ]);
+      console.log('UserDataManager: All data cleared successfully');
     } catch (error) {
       console.error('Error clearing user data:', error);
       throw error;
@@ -89,12 +121,12 @@ export class UserDataManager {
   static async isLoggedIn(): Promise<boolean> {
     try {
       console.log('UserDataManager: Checking login status...');
-      const accessToken = await this.getAccessToken();
+      const loginState = await this.getLoginState();
       const userData = await this.getUserData();
-      console.log('UserDataManager: accessToken exists:', !!accessToken, 'userData exists:', !!userData);
+      console.log('UserDataManager: loginState:', loginState, 'userData exists:', !!userData);
       
-      // Consider logged in if we have user data (since your API doesn't return tokens)
-      const isLoggedIn = !!userData;
+      // Consider logged in if we have login state true AND user data
+      const isLoggedIn = loginState && !!userData;
       console.log('UserDataManager: Is logged in:', isLoggedIn);
       return isLoggedIn;
     } catch (error) {

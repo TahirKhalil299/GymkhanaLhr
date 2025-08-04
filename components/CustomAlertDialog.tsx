@@ -1,12 +1,12 @@
 import React from 'react';
 import {
-    Dimensions,
-    Modal,
-    Platform,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Dimensions,
+  Modal,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 type DialogClickListener = () => void;
@@ -87,14 +87,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    fontSize: 18,
+    fontSize: 22,
     fontFamily: 'Poppins-Bold',
     color: '#1e1e1e',
     marginTop: 15,
     textAlign: 'center',
   },
   description: {
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: 'Poppins-SemiBold',
     color: '#1e1e1e',
     marginTop: 27,
@@ -104,8 +104,8 @@ const styles = StyleSheet.create({
   button: {
     width: '100%',
     height: 35,
-    backgroundColor: '#007AFF', // Change to your preferred button color
-    borderRadius: 20,
+    backgroundColor: '#e74c3d', // Change to your preferred button color
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 20,

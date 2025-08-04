@@ -109,6 +109,15 @@ export default function LoginScreen() {
               console.error('Error saving tokens:', tokenError);
             }
             
+            // Set login state to true
+            console.log('Setting login state to true...');
+            try {
+              await UserDataManager.setLoginState(true);
+              console.log('Login state saved successfully');
+            } catch (loginStateError) {
+              console.error('Error saving login state:', loginStateError);
+            }
+            
             console.log('Navigating to home screen...');
             try {
               // Navigate to home screen
@@ -315,9 +324,9 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    fontSize: 13,
+    fontSize: 15,
     color: '#000',
-  paddingVertical: 0,   // unnecessary height hatane ke liye
+  paddingVertical: 5,   // unnecessary height hatane ke liye
   paddingHorizontal: 0,
   },
   eyeIcon: {

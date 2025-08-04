@@ -1,12 +1,12 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import React, { useEffect, useRef } from 'react';
 import {
-  Animated,
-  Dimensions,
-  StyleSheet,
-  View
+    Animated,
+    Dimensions,
+    StyleSheet,
+    View
 } from 'react-native';
+import { UserDataManager } from '../utils/userDataManager';
 
 const { width, height } = Dimensions.get('window');
 
@@ -71,12 +71,17 @@ export default function AuthSplashScreen() {
     // Check if user is already logged in
     const checkAuthAndNavigate = async () => {
       try {
-        const token = await AsyncStorage.getItem('accessToken');
-        if (token) {
+        console.log('Checking authentication status...');
+        const isLoggedIn = await UserDataManager.isLoggedIn();
+        console.log('Is user logged in:', isLoggedIn);
+        
+        if (isLoggedIn) {
           // User is logged in, go to home
+          console.log('User is logged in, navigating to home');
           router.replace('/home');
         } else {
           // User is not logged in, go to login
+          console.log('User is not logged in, navigating to login');
           router.replace('/login');
         }
       } catch (error) {

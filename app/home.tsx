@@ -2,26 +2,74 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-    Alert,
-    Image,
-    ScrollView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  Alert,
+  Animated,
+  Dimensions,
+  Image,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import AuthService from '../src/api/AuthService';
 import { UserDataManager } from '../utils/userDataManager';
 
+const { width: screenWidth } = Dimensions.get('window');
+
 export default function HomeScreen() {
   const [userName, setUserName] = useState('User');
+  const [currentCurrencyIndex, setCurrentCurrencyIndex] = useState(0);
   const router = useRouter();
+  const slideAnim = new Animated.Value(0);
+
+  // Sample currency data - replace with your actual data
+  const currencies = [
+    {
+      code: 'EUR',
+      name: 'European E. Community',
+      flag: require('../assets/images/usa__flag.png'), // Add this image
+      buying: 335.00,
+      selling: 337.85
+    },
+    {
+      code: 'USD',
+      name: 'United States Dollar',
+      flag: require('../assets/images/usa__flag.png'), // Add this image
+      buying: 278.50,
+      selling: 280.25
+    },
+    {
+      code: 'GBP',
+      name: 'British Pound Sterling',
+      flag: require('../assets/images/usa__flag.png'), // Add this image
+      buying: 354.75,
+      selling: 357.20
+    }
+  ];
 
   useEffect(() => {
     console.log('Home screen mounted');
-    // Check if user is logged in
     checkAuthStatus();
+
+    // Start currency carousel
+    const interval = setInterval(() => {
+      setCurrentCurrencyIndex((prevIndex) => {
+        const nextIndex = (prevIndex + 1) % currencies.length;
+
+        // Animate slide
+        Animated.timing(slideAnim, {
+          toValue: nextIndex * screenWidth,
+          duration: 500,
+          useNativeDriver: true,
+        }).start();
+
+        return nextIndex;
+      });
+    }, 2000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const checkAuthStatus = async () => {
@@ -29,29 +77,23 @@ export default function HomeScreen() {
       console.log('Checking auth status...');
       const isLoggedIn = await UserDataManager.isLoggedIn();
       console.log('Is logged in:', isLoggedIn);
-      
-      // For debugging, let's also check individual components
+
       const accessToken = await UserDataManager.getAccessToken();
       const userData = await UserDataManager.getUserData();
       console.log('Individual checks - accessToken exists:', !!accessToken, 'userData exists:', !!userData);
-      
+
       if (!isLoggedIn) {
         console.log('Not logged in, redirecting to login');
-        // No valid login found, redirect to login
         router.replace('/login');
         return;
       }
-      
+
       console.log('User is logged in, getting user data...');
-      // Get user data for display
       console.log('User data:', userData);
-      
+
       if (userData && userData.C_Name) {
         setUserName(userData.C_Name);
       }
-      
-      // You can fetch user profile here if needed
-      // For now, we'll just show a welcome message
     } catch (error) {
       console.error('Error checking auth status:', error);
       router.replace('/login');
@@ -74,15 +116,10 @@ export default function HomeScreen() {
             try {
               const authService = new AuthService();
               await authService.logout();
-              
-              // Clear stored tokens and user data
               await UserDataManager.clearAllData();
-              
-              // Navigate back to login
               router.replace('/login');
             } catch (error) {
               console.error('Logout error:', error);
-              // Still clear tokens and navigate even if logout API fails
               await UserDataManager.clearAllData();
               router.replace('/login');
             }
@@ -92,97 +129,171 @@ export default function HomeScreen() {
     );
   };
 
+  const menuItems = [
+    {
+      icon: 'document-text-outline',
+      title: 'Deal\nDetails',
+      image: require('../assets/images/deal-details.png')
+    },
+    {
+      icon: 'cash-outline',
+      title: 'Currency\nRates',
+      image: require('../assets/images/currency-rates.png')
+    },
+    {
+      icon: 'handshake-outline',
+      title: 'Book a\nDeal',
+      image: require('../assets/images/book-deal.png')
+    },
+    {
+      icon: 'globe-outline',
+      title: 'Network',
+      image: require('../assets/images/network.png')
+    },
+    {
+      icon: 'megaphone-outline',
+      title: 'Announcemen...',
+      image: require('../assets/images/announcement.png')
+    },
+    {
+      icon: 'call-outline',
+      title: 'Contact Us',
+      image: require('../assets/images/contact-us.png')
+    },
+    {
+      icon: 'person-outline',
+      title: 'Profile',
+      image: require('../assets/images/profile.png')
+    },
+    {
+      icon: 'help-circle-outline',
+      title: 'FAQs',
+      image: require('../assets/images/faqs.png')
+    },
+    {
+      icon: 'lock-closed-outline',
+      title: 'Update\nPassword',
+      image: require('../assets/images/update-password.png')
+    },
+    {
+      icon: 'home-outline',
+      title: 'Home\nDelivery',
+      image: require('../assets/images/home-delivery.png')
+    }
+  ];
+
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#1a1a2e" />
-      
+      <StatusBar barStyle="dark-content" backgroundColor="#f8f9fa" />
+
       {/* Header */}
       <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <Image
-            source={require('../assets/images/logo.png')}
-            style={styles.headerLogo}
-            resizeMode="contain"
-          />
-          <Text style={styles.headerTitle}>GymKhanaLhr</Text>
-        </View>
+        <TouchableOpacity style={styles.menuButton}>
+          <Ionicons name="menu" size={24} color="#333" />
+        </TouchableOpacity>
+        <Text style={styles.userName}>{userName}</Text>
         <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-          <Ionicons name="log-out-outline" size={24} color="#ffffff" />
+          <Ionicons name="log-out-outline" size={24} color="#333" />
         </TouchableOpacity>
       </View>
 
-      {/* Main Content */}
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Welcome Section */}
-        <View style={styles.welcomeSection}>
-          <Text style={styles.welcomeTitle}>Welcome back!</Text>
-          <Text style={styles.welcomeSubtitle}>
-            Ready to crush your fitness goals today?
-          </Text>
+        {/* Currency Card */}
+        <View style={styles.currencyContainer}>
+          <View style={styles.currencyCard}>
+            <View style={styles.currencyHeader}>
+              <View style={styles.currencyInfo}>
+                <Image
+                  source={currencies[currentCurrencyIndex].flag}
+                  style={styles.flagIcon}
+                  resizeMode="contain"
+                />
+                <View style={styles.currencyTextContainer}>
+                  <Text style={styles.currencyCode}>
+                    {currencies[currentCurrencyIndex].code}
+                  </Text>
+                  <Text style={styles.currencyName}>
+                    {currencies[currentCurrencyIndex].name}
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.ratesContainer}>
+              <View style={styles.rateCard}>
+                <View style={styles.buyingRate}>
+                  <Text style={styles.rateLabel}>Buying</Text>
+                  <Text style={styles.rateValue}>
+                    {currencies[currentCurrencyIndex].buying.toFixed(2)}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.rateCard}>
+                <View style={styles.sellingRate}>
+                  <Text style={styles.rateLabel}>Selling</Text>
+                  <Text style={styles.rateValue}>
+                    {currencies[currentCurrencyIndex].selling.toFixed(2)}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </View>
         </View>
 
-        {/* Quick Actions */}
-        <View style={styles.quickActions}>
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
-          
-          <View style={styles.actionGrid}>
-            <TouchableOpacity style={styles.actionCard}>
-              <Ionicons name="fitness-outline" size={32} color="#4CAF50" />
-              <Text style={styles.actionText}>Start Workout</Text>
+        {/* Menu Grid */}
+        <View style={styles.menuGrid}>
+          {menuItems.map((item, index) => (
+            <TouchableOpacity key={index} style={styles.menuItem}>
+              <View style={styles.menuIconContainer}>
+                <Image
+                  source={item.image}
+                  style={styles.menuIcon}
+                  resizeMode="contain"
+                />
+              </View>
+              <Text style={styles.menuText}>{item.title}</Text>
             </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.actionCard}>
-              <Ionicons name="calendar-outline" size={32} color="#2196F3" />
-              <Text style={styles.actionText}>Schedule</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.actionCard}>
-              <Ionicons name="stats-chart-outline" size={32} color="#FF9800" />
-              <Text style={styles.actionText}>Progress</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.actionCard}>
-              <Ionicons name="person-outline" size={32} color="#9C27B0" />
-              <Text style={styles.actionText}>Profile</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Recent Activity */}
-        <View style={styles.recentActivity}>
-          <Text style={styles.sectionTitle}>Recent Activity</Text>
-          
-          <View style={styles.activityItem}>
-            <View style={styles.activityIcon}>
-              <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
-            </View>
-            <View style={styles.activityContent}>
-              <Text style={styles.activityTitle}>Upper Body Workout</Text>
-              <Text style={styles.activityTime}>2 hours ago</Text>
-            </View>
-          </View>
-          
-          <View style={styles.activityItem}>
-            <View style={styles.activityIcon}>
-              <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
-            </View>
-            <View style={styles.activityContent}>
-              <Text style={styles.activityTitle}>Cardio Session</Text>
-              <Text style={styles.activityTime}>Yesterday</Text>
-            </View>
-          </View>
-          
-          <View style={styles.activityItem}>
-            <View style={styles.activityIcon}>
-              <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
-            </View>
-            <View style={styles.activityContent}>
-              <Text style={styles.activityTitle}>Leg Day</Text>
-              <Text style={styles.activityTime}>2 days ago</Text>
-            </View>
-          </View>
+          ))}
         </View>
       </ScrollView>
+
+      {/* Bottom Navigation */}
+      <View style={styles.bottomNav}>
+        <TouchableOpacity style={styles.navItem}>
+          <Image
+            source={require('../assets/images/deal-details.png')}
+            style={styles.navIcon}
+            resizeMode="contain"
+          />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem}>
+          <Image
+            source={require('../assets/images/currency-rates.png')}
+            style={styles.navIcon}
+            resizeMode="contain"
+          />
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.navItem, styles.activeNavItem]}>
+          <View style={styles.activeNavBackground}>
+            <Ionicons name="apps" size={24} color="#ff6b35" />
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem}>
+          <Image
+            source={require('../assets/images/book-deal.png')}
+            style={[styles.navIcon, { tintColor: '#000000' }]}
+            resizeMode="contain"
+          />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem}>
+          <Image
+            source={require('../assets/images/network.png')}
+            style={styles.navIcon}
+            resizeMode="contain"
+          />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -190,30 +301,21 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#f8f9fa',
   },
   header: {
-    backgroundColor: '#1a1a2e',
-    paddingTop: 50,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 50,
+    paddingBottom: 20,
+    backgroundColor: '#f8f9fa',
   },
-  headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  headerLogo: {
-    width: 40,
-    height: 40,
-    marginRight: 10,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#ffffff',
+  userName: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
   },
   logoutButton: {
     padding: 8,
@@ -222,41 +324,101 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 20,
   },
-  welcomeSection: {
-    paddingVertical: 30,
-    alignItems: 'center',
-  },
-  welcomeTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#1a1a2e',
-    marginBottom: 8,
-  },
-  welcomeSubtitle: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1a1a2e',
-    marginBottom: 20,
-  },
-  quickActions: {
+  currencyContainer: {
     marginBottom: 30,
   },
-  actionGrid: {
+  currencyCard: {
+    backgroundColor: '#4a5568',
+    borderRadius: 16,
+    padding: 10,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 5,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  currencyHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  currencyInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  flagIcon: {
+    width: 40,
+    height: 40,
+    marginRight: 12,
+    borderRadius: 20,
+  },
+  currencyTextContainer: {
+    flex: 1,
+  },
+  currencyCode: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    marginBottom: 4,
+  },
+  currencyName: {
+    fontSize: 14,
+    color: '#cbd5e0',
+  },
+  ratesContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  rateCard: {
+    flex: 1,
+    marginHorizontal: 5,
+  },
+  buyingRate: {
+    backgroundColor: '#48bb78',
+    borderRadius: 12,
+    padding: 5,
+    alignItems: 'center',
+  },
+  sellingRate: {
+    backgroundColor: '#f56565',
+    borderRadius: 12,
+    padding: 5,
+    alignItems: 'center',
+  },
+  rateLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#ffffff',
+    marginBottom: 8,
+  },
+  rateValue: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    backgroundColor: '#ffffff',
+
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    minWidth: 80,
+    textAlign: 'center',
+  },
+  menuGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
+    marginBottom: 100,
   },
-  actionCard: {
+  menuItem: {
+    width: '30%',
     backgroundColor: '#ffffff',
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 20,
     alignItems: 'center',
-    width: '48%',
     marginBottom: 15,
     shadowColor: '#000',
     shadowOffset: {
@@ -264,49 +426,51 @@ const styles = StyleSheet.create({
       height: 2,
     },
     shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  actionText: {
-    marginTop: 8,
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1a1a2e',
-    textAlign: 'center',
-  },
-  recentActivity: {
-    marginBottom: 30,
-  },
-  activityItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    padding: 15,
-    marginBottom: 10,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 2.22,
+    shadowRadius: 4,
     elevation: 3,
   },
-  activityIcon: {
-    marginRight: 15,
+  menuIconContainer: {
+    marginBottom: 8,
   },
-  activityContent: {
-    flex: 1,
+  menuIcon: {
+    width: 27,
+    height: 27,
   },
-  activityTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1a1a2e',
-    marginBottom: 4,
+  menuText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#333',
+    textAlign: 'center',
+    lineHeight: 15,
   },
-  activityTime: {
-    fontSize: 14,
-    color: '#666',
+  bottomNav: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#ffffff',
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    paddingVertical: 15,
+    paddingBottom: 30,
+    borderTopWidth: 1,
+    borderTopColor: '#e2e8f0',
   },
-}); 
+  navItem: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  navIcon: {
+    width: 24,
+    height: 24,
+  },
+  activeNavItem: {
+    position: 'relative',
+  },
+  activeNavBackground: {
+    backgroundColor: '#ffe5db',
+    borderRadius: 20,
+    padding: 12,
+  },
+});

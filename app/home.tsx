@@ -285,7 +285,7 @@ export default function HomeScreen() {
       onPress: () => {
         console.log('Contact Us pressed');
         // Add navigation or functionality here
-        // router.push('/contact-us');
+        router.push('/contact');
       }
     },
     {

@@ -272,10 +272,10 @@ export default function HomeScreen() {
       icon: 'megaphone-outline',
       title: 'Announcemen...',
       image: require('../assets/images/announcement.png'),
-      onPress: () => {
-        console.log('Announcement pressed');
+       onPress: () => {
+        console.log('Network pressed');
         // Add navigation or functionality here
-        // router.push('/announcements');
+        router.push('/announcements');
       }
     },
     {

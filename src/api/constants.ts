@@ -8,12 +8,23 @@ export const BASE_URL: string = "http://192.168.0.180/WS01_BOP/api/";
 // API Configuration
 export const API_KEY: string = "234637d35a0d44db1bfec15a53c453e3";
 
+// API Credentials
+export const API_CREDENTIALS = {
+  userId: "BOPEXA1",
+  userPassword: "BOPExA1@712025",
+  authToken: "BOpExA1547",
+  customerCode: "10002"
+};
+
 // API Endpoints
 export const ENDPOINTS = {
   AUTH: {
     REFRESH_TOKEN: 'api/auth/refresh',
     LOGIN: 'PostVerifyLogin',
     LOGOUT: 'api/auth/logout',
+  },
+  CURRENCY: {
+    GET_RATES: 'getCurrencyRates',
   },
   USER: {
     PROFILE: 'api/user/profile',
@@ -42,6 +53,7 @@ export const HTTP_STATUS = {
 // Type definitions for better type safety
 export type EndpointKey = keyof typeof ENDPOINTS;
 export type AuthEndpointKey = keyof typeof ENDPOINTS.AUTH;
+export type CurrencyEndpointKey = keyof typeof ENDPOINTS.CURRENCY;
 export type UserEndpointKey = keyof typeof ENDPOINTS.USER;
 export type HttpStatusValue = typeof HTTP_STATUS[keyof typeof HTTP_STATUS];
 export type TimeoutKey = keyof typeof TIMEOUTS; 

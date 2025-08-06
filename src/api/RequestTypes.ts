@@ -1,8 +1,8 @@
 enum RequestType {
-  LOGIN = 'POST_VERIFY_LOGIN',
+  LOGIN = 'LOGIN',
   LOGOUT = 'LOGOUT',
   REFRESH_TOKEN = 'REFRESH_TOKEN',
-  // Add other request types as needed
+  GET_RATE_LIST = 'GET_RATE_LIST',
 }
 
 export default RequestType;

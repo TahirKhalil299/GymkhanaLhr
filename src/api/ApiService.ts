@@ -1,6 +1,6 @@
 // src/api/ApiService.ts
 
-import { ENDPOINTS } from './constants';
+import { API_CREDENTIALS, ENDPOINTS } from './constants';
 import ApiClient from './utils/ApiClient';
 
 // Type definitions
@@ -32,6 +32,7 @@ interface ApiResponse<T = any> {
   statusText: string;
 }
 
+// Create a static API service object with methods
 const ApiService = {
   // Authentication endpoints
   refreshToken: (payload: RefreshTokenPayload): Promise<ApiResponse> => 
@@ -42,14 +43,26 @@ const ApiService = {
   
   logout: (): Promise<ApiResponse> => 
     ApiClient.post(ENDPOINTS.AUTH.LOGOUT),
-  
+
+  // Currency endpoints
+  getCurrencyRates: (): Promise<ApiResponse> => {
+    const queryParams = new URLSearchParams({
+      User_ID: API_CREDENTIALS.userId,
+      User_Password: API_CREDENTIALS.userPassword,
+      Auth_Token: API_CREDENTIALS.authToken,
+      Customer_Code: API_CREDENTIALS.customerCode,
+    });
+
+    return ApiClient.get(`${ENDPOINTS.CURRENCY.GET_RATES}?${queryParams.toString()}`);
+  },
+
   // User endpoints
   getUserProfile: (): Promise<ApiResponse<UserProfile>> => 
     ApiClient.get(ENDPOINTS.USER.PROFILE),
   
   updateUserProfile: (profileData: Partial<UserProfile>): Promise<ApiResponse> => 
     ApiClient.put(ENDPOINTS.USER.UPDATE_PROFILE, profileData),
-  
+
   // Generic methods
   get: <T = any>(url: string, config?: ApiConfig): Promise<ApiResponse<T>> => 
     ApiClient.get(url, config),

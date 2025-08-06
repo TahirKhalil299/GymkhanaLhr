@@ -14,67 +14,127 @@ import {
   View
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import ApiService from '../src/api/ApiService';
+import { Rates } from '../src/api/models/CurrencyRatesResponse';
+import RequestType from '../src/api/RequestTypes';
+import { ApiListener } from '../src/api/ServiceProvider';
 import { UserDataManager } from '../utils/userDataManager';
 
 const { width: screenWidth } = Dimensions.get('window');
 
-// Define the currency type
-interface Currency {
-  id: number;
-  code: string;
-  name: string;
-  flag: any;
-  buying: number;
-  selling: number;
-}
+// Number formatting function (equivalent to Kotlin function)
+const formatNumber = (value: string): string => {
+  try {
+    const number = parseFloat(value);
+    if (isNaN(number)) {
+      return value;
+    }
+
+    // Convert to string and remove trailing zeros
+    const stripped = number.toString();
+    const parts = stripped.split('.');
+
+    if (parts.length === 1) {
+      // No decimal part, append .00
+      return parts[0] + '.00';
+    }
+
+    const integerPart = parts[0];
+    let decimalPart = parts[1];
+
+    // Limit to 6 digits max after decimal
+    if (decimalPart.length > 6) {
+      decimalPart = decimalPart.substring(0, 6);
+    }
+
+    // Ensure at least 2 digits after decimal
+    if (decimalPart.length < 2) {
+      decimalPart = decimalPart.padEnd(2, '0');
+    }
+
+    return `${integerPart}.${decimalPart}`;
+  } catch (error) {
+    return value;
+  }
+};
 
 export default function HomeScreen() {
   const [userName, setUserName] = useState('User');
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const [currencies, setCurrencies] = useState<Rates[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const flatListRef = useRef<FlatList>(null);
 
-  // Sample currency data - replace with your actual data
-  const currencies: Currency[] = [
-    {
-      id: 1,
-      code: 'EUR',
-      name: 'European E. Community',
-      flag: require('../assets/images/uk_flag.png'), // Use proper EUR flag
-      buying: 335.00,
-      selling: 337.85
-    },
-    {
-      id: 2,
-      code: 'USD',
-      name: 'United States Dollar',
-      flag: require('../assets/images/usa__flag.png'), // Use proper USA flag
-      buying: 278.50,
-      selling: 280.25
-    },
-    {
-      id: 3,
-      code: 'GBP',
-      name: 'British Pound Sterling',
-      flag: require('../assets/images/uk_flag.png'), // Use proper GBP flag
-      buying: 354.75,
-      selling: 357.20
-    },
-    {
-      id: 4,
-      code: 'CAD',
-      name: 'Canadian Dollar',
-      flag: require('../assets/images/uk_flag.png'), // Use proper CAD flag
-      buying: 205.30,
-      selling: 207.85
-    }
-  ];
-
   useEffect(() => {
     console.log('Home screen mounted');
     checkAuthStatus();
+    fetchCurrencyRates();
   }, []);
+
+  const fetchCurrencyRates = () => {
+    setIsLoading(true);
+
+    const listener: ApiListener = {
+      onRequestStarted: () => {
+        console.log('Currency rates request started');
+      },
+      onRequestSuccess: async (response, data, tag) => {
+        console.log('Currency rates successful:', data);
+        try {
+          const responseData = JSON.parse(data);
+          console.log('Parsed currency rates data:', responseData);
+
+          // Check if the response has the correct structure
+          if (responseData.data && responseData.data.Rates && Array.isArray(responseData.data.Rates)) {
+            // Take only first 4 items as requested
+            const firstFourRates = responseData.data.Rates.slice(0, 4);
+            setCurrencies(firstFourRates);
+            console.log('Currency rates set:', firstFourRates);
+          } else if (responseData.Rates && Array.isArray(responseData.Rates)) {
+            // Fallback for direct Rates array
+            const firstFourRates = responseData.Rates.slice(0, 4);
+            setCurrencies(firstFourRates);
+            console.log('Currency rates set (fallback):', firstFourRates);
+          } else {
+            console.log('No rates data found in response');
+            setCurrencies([]);
+          }
+        } catch (error) {
+          console.error('Error processing currency rates response:', error);
+          setCurrencies([]);
+        }
+      },
+      onRequestFailure: (error, message, errors, tag) => {
+        console.log('Currency rates failed:', message);
+        setCurrencies([]);
+      },
+      onRequestEnded: () => {
+        console.log('Currency rates request ended');
+        setIsLoading(false);
+      },
+      onError: (response, message, tag) => {
+        console.log('Currency rates error:', message);
+        setCurrencies([]);
+        setIsLoading(false);
+      }
+    };
+
+    try {
+      // Use ServiceProvider to make the API call
+      const { serviceProvider } = require('../src/api/ServiceProvider');
+      serviceProvider.sendApiCall(
+        ApiService.getCurrencyRates(),
+        RequestType.GET_RATE_LIST,
+        listener
+      );
+    } catch (error) {
+      console.error('Currency rates error:', error);
+      setCurrencies([]);
+      setIsLoading(false);
+    }
+  };
 
   // Auto-swipe functionality
   useEffect(() => {
@@ -82,7 +142,7 @@ export default function HomeScreen() {
       if (currencies.length > 0) {
         const nextIndex = (currentCardIndex + 1) % currencies.length;
         setCurrentCardIndex(nextIndex);
-        
+
         // Scroll to the next card
         flatListRef.current?.scrollToIndex({
           index: nextIndex,
@@ -140,15 +200,15 @@ export default function HomeScreen() {
               // const authService = new AuthService();
               // await authService.logout();
               console.log('Auth service logout completed');
-              
+
               // Clear all data and set login state to false
               await UserDataManager.clearAllData();
               console.log('All data cleared');
-              
+
               // Set login state to false
-             //  await UserDataManager.setLoginState(false);
+              //  await UserDataManager.setLoginState(false);
               console.log('Login state set to false');
-              
+
               router.replace('/login');
             } catch (error) {
               // console.error('Logout error:', error);
@@ -167,67 +227,124 @@ export default function HomeScreen() {
     {
       icon: 'document-text-outline',
       title: 'Deal\nDetails',
-      image: require('../assets/images/deal-details.png')
+      image: require('../assets/images/deal-details.png'),
+      onPress: () => {
+        console.log('Deal Details pressed');
+        // Add navigation or functionality here
+        // router.push('/deal-details');
+      }
     },
     {
       icon: 'cash-outline',
       title: 'Currency\nRates',
-      image: require('../assets/images/currency-rates.png')
+      image: require('../assets/images/currency-rates.png'),
+      onPress: () => {
+        console.log('Currency rates menu item pressed');
+        try {
+          router.push('/currency-rates');
+          console.log('Navigation attempted');
+        } catch (error) {
+          console.error('Navigation error:', error);
+        }
+      }
     },
     {
       icon: 'handshake-outline',
       title: 'Book a\nDeal',
-      image: require('../assets/images/book-deal.png')
+      image: require('../assets/images/book-deal.png'),
+      onPress: () => {
+        console.log('Book a Deal pressed');
+        // Add navigation or functionality here
+        // router.push('/book-deal');
+      }
     },
     {
       icon: 'globe-outline',
       title: 'Network',
-      image: require('../assets/images/network.png')
+      image: require('../assets/images/network.png'),
+      onPress: () => {
+        console.log('Network pressed');
+        // Add navigation or functionality here
+        router.push('/network');
+      }
     },
     {
       icon: 'megaphone-outline',
       title: 'Announcemen...',
-      image: require('../assets/images/announcement.png')
+      image: require('../assets/images/announcement.png'),
+      onPress: () => {
+        console.log('Announcement pressed');
+        // Add navigation or functionality here
+        // router.push('/announcements');
+      }
     },
     {
       icon: 'call-outline',
       title: 'Contact Us',
-      image: require('../assets/images/contact-us.png')
+      image: require('../assets/images/contact-us.png'),
+      onPress: () => {
+        console.log('Contact Us pressed');
+        // Add navigation or functionality here
+        // router.push('/contact-us');
+      }
     },
     {
       icon: 'person-outline',
       title: 'Profile',
-      image: require('../assets/images/profile.png')
+      image: require('../assets/images/profile.png'),
+      onPress: () => {
+        console.log('Profile pressed');
+        // Add navigation or functionality here
+        // router.push('/profile');
+      }
     },
     {
       icon: 'help-circle-outline',
       title: 'FAQs',
-      image: require('../assets/images/faqs.png')
+      image: require('../assets/images/faqs.png'),
+      onPress: () => {
+        console.log('FAQs pressed');
+        // Add navigation or functionality here
+        // router.push('/faqs');
+      }
     },
     {
       icon: 'lock-closed-outline',
       title: 'Update\nPassword',
-      image: require('../assets/images/update-password.png')
+      image: require('../assets/images/update-password.png'),
+      onPress: () => {
+        console.log('Update Password pressed');
+        // Add navigation or functionality here
+        // router.push('/update-password');
+      }
     },
     {
       icon: 'home-outline',
       title: 'Home\nDelivery',
-      image: require('../assets/images/home-delivery.png')
+      image: require('../assets/images/home-delivery.png'),
+      onPress: () => {
+        console.log('Home Delivery pressed');
+        // Add navigation or functionality here
+        // router.push('/home-delivery');
+      }
     }
   ];
 
-  const renderCurrencyCard = ({ item }: { item: Currency }) => (
+  const renderCurrencyCard = ({ item }: { item: Rates }) => (
     <View style={styles.currencyCard}>
       {/* Header Section */}
       <View style={styles.currencyHeader}>
-        <Image
-          source={item.flag}
-          style={styles.flagIcon}
-          resizeMode="contain"
-        />
+        <View style={styles.flagContainer}>
+          <Image
+            source={{ uri: item.ImagePath }}
+            style={styles.flagIcon}
+            resizeMode="cover"
+            defaultSource={require('../assets/images/uk_flag.png')}
+          />
+        </View>
         <View style={styles.currencyTextContainer}>
-          <Text style={styles.currencyCode}>{item.code}</Text>
-          <Text style={styles.currencyName}>{item.name}</Text>
+          <Text style={styles.currencyCode}>{item.Currency}</Text>
+          <Text style={styles.currencyName}>{item.Curr_Country}</Text>
         </View>
       </View>
 
@@ -239,7 +356,7 @@ export default function HomeScreen() {
             <Text style={styles.rateHeaderText}>Buying</Text>
           </View>
           <View style={styles.rateValueContainer}>
-            <Text style={styles.rateValueText}>{item.buying.toFixed(2)}</Text>
+            <Text style={styles.rateValueText}>{formatNumber(item.Buy_Rate)}</Text>
           </View>
         </View>
 
@@ -249,7 +366,7 @@ export default function HomeScreen() {
             <Text style={styles.rateHeaderText}>Selling</Text>
           </View>
           <View style={styles.rateValueContainer}>
-            <Text style={styles.rateValueText}>{item.selling.toFixed(2)}</Text>
+            <Text style={styles.rateValueText}>{formatNumber(item.Sell_Rate)}</Text>
           </View>
         </View>
       </View>
@@ -266,7 +383,7 @@ export default function HomeScreen() {
   return (
     <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
       <StatusBar barStyle="dark-content" backgroundColor="#f8f9fa" />
-      
+
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
@@ -283,34 +400,48 @@ export default function HomeScreen() {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Currency Cards Horizontal Scroll */}
         <View style={styles.currencyContainer}>
-          <FlatList
-            ref={flatListRef}
-            data={currencies}
-            renderItem={renderCurrencyCard}
-            keyExtractor={(item) => item.id.toString()}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            pagingEnabled
-            snapToInterval={screenWidth - 20}
-            snapToAlignment="start"
-            decelerationRate={0.8}
-            contentContainerStyle={styles.currencyFlatList}
-            getItemLayout={(data, index) => ({
-              length: screenWidth - 20,
-              offset: (screenWidth - 20) * index,
-              index,
-            })}
-            onScroll={handleScroll}
-            scrollEventThrottle={16}
-          />
+          {isLoading ? (
+            <View style={styles.loadingContainer}>
+              <Text style={styles.loadingText}>Loading currency rates...</Text>
+            </View>
+          ) : currencies.length > 0 ? (
+            <FlatList
+              ref={flatListRef}
+              data={currencies}
+              renderItem={renderCurrencyCard}
+              keyExtractor={(item) => item.Currency}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              pagingEnabled
+              snapToInterval={screenWidth - 20}
+              snapToAlignment="start"
+              decelerationRate={0.8}
+              contentContainerStyle={styles.currencyFlatList}
+              getItemLayout={(data, index) => ({
+                length: screenWidth - 20,
+                offset: (screenWidth - 20) * index,
+                index,
+              })}
+              onScroll={handleScroll}
+              scrollEventThrottle={16}
+            />
+          ) : (
+            <View style={styles.noDataContainer}>
+              <Text style={styles.noDataText}>No currency rates available</Text>
+            </View>
+          )}
         </View>
 
-        {/* Menu Grid - Updated to match Android layout */}
+        {/* Menu Grid - Updated with onPress functionality */}
         <View style={styles.menuContainer}>
           {/* Row 1 */}
           <View style={styles.menuRow}>
             {menuItems.slice(0, 3).map((item, index) => (
-              <TouchableOpacity key={index} style={styles.menuItem}>
+              <TouchableOpacity 
+                key={index} 
+                style={styles.menuItem}
+                onPress={item.onPress}
+              >
                 <View style={styles.menuIconContainer}>
                   <Image
                     source={item.image}
@@ -326,7 +457,11 @@ export default function HomeScreen() {
           {/* Row 2 */}
           <View style={styles.menuRow}>
             {menuItems.slice(3, 6).map((item, index) => (
-              <TouchableOpacity key={index + 3} style={styles.menuItem}>
+              <TouchableOpacity 
+                key={index + 3} 
+                style={styles.menuItem}
+                onPress={item.onPress}
+              >
                 <View style={styles.menuIconContainer}>
                   <Image
                     source={item.image}
@@ -342,7 +477,11 @@ export default function HomeScreen() {
           {/* Row 3 */}
           <View style={styles.menuRow}>
             {menuItems.slice(6, 9).map((item, index) => (
-              <TouchableOpacity key={index + 6} style={styles.menuItem}>
+              <TouchableOpacity 
+                key={index + 6} 
+                style={styles.menuItem}
+                onPress={item.onPress}
+              >
                 <View style={styles.menuIconContainer}>
                   <Image
                     source={item.image}
@@ -357,7 +496,10 @@ export default function HomeScreen() {
 
           {/* Row 4 - Updated to match Android (3 items with empty spaces) */}
           <View style={styles.menuRow}>
-            <TouchableOpacity style={styles.menuItem}>
+            <TouchableOpacity 
+              style={styles.menuItem}
+              onPress={menuItems[9].onPress}
+            >
               <View style={styles.menuIconContainer}>
                 <Image
                   source={menuItems[9].image}
@@ -383,7 +525,18 @@ export default function HomeScreen() {
             resizeMode="contain"
           />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
+        <TouchableOpacity
+          style={styles.navItem}
+          onPress={() => {
+            console.log('Currency rates bottom nav pressed');
+            try {
+              router.replace('/currency-rates');
+              console.log('Bottom nav navigation attempted');
+            } catch (error) {
+              console.error('Bottom nav navigation error:', error);
+            }
+          }}
+        >
           <Image
             source={require('../assets/images/currency-rates.png')}
             style={styles.navIcon}
@@ -457,8 +610,9 @@ const styles = StyleSheet.create({
   currencyCard: {
     backgroundColor: '#4a5568',
     borderRadius: 16, // Increased border radius to match Android
-    padding: 20,
-    marginRight: 20, // Add margin to separate cards
+    padding: 10,
+    marginRight: 20,
+    // Add margin to separate cards
     width: screenWidth - 40, // Full width minus horizontal padding
     shadowColor: '#000',
     shadowOffset: {
@@ -472,13 +626,20 @@ const styles = StyleSheet.create({
   currencyHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 30,
   },
-  flagIcon: {
-    width: 40, // Increased size to match Android
+  flagContainer: {
+    width: 40,
     height: 40,
     borderRadius: 20,
-    marginRight: 15, // Reduced margin
+    overflow: 'hidden',
+    marginRight: 15,
+    marginLeft: 5,
+    backgroundColor: '#f0f0f0',
+  },
+  flagIcon: {
+    width: 40,
+    height: 40,
   },
   currencyTextContainer: {
     flex: 1,
@@ -488,11 +649,13 @@ const styles = StyleSheet.create({
     fontSize: 14, // Increased font size
     fontWeight: 'bold',
     color: '#ffffff',
+    marginRight: 15,
     marginBottom: 4,
   },
   currencyName: {
     fontSize: 12, // Increased font size
     color: '#cbd5e0',
+    marginRight: 15,
     textAlign: 'right',
   },
   ratesContainer: {
@@ -501,6 +664,7 @@ const styles = StyleSheet.create({
   },
   rateContainer: {
     flex: 1,
+    marginBottom: 15,
     marginHorizontal: 7.5,
   },
   buyingHeader: {
@@ -564,7 +728,7 @@ const styles = StyleSheet.create({
     height: 110,
   },
   menuIconContainer: {
-    marginBottom:15 ,
+    marginBottom: 15,
   },
   menuIcon: {
     width: 24, // Increased icon size
@@ -613,5 +777,27 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffe5db',
     borderRadius: 20,
     padding: 12,
+  },
+  loadingContainer: {
+    height: 200,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f0f0f0',
+  },
+  loadingText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  noDataContainer: {
+    height: 200,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f0f0f0',
+  },
+  noDataText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
   },
 });

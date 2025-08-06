@@ -65,7 +65,28 @@ export default class ServiceProvider {
     tag?: string,
     listener?: ApiListener
   ): Promise<any> {
-    const requestPromise = ApiService[method](endpoint, data);
+    let requestPromise: Promise<ApiResponse>;
+    
+    switch (method) {
+      case 'get':
+        requestPromise = ApiService.get(endpoint);
+        break;
+      case 'post':
+        requestPromise = ApiService.post(endpoint, data);
+        break;
+      case 'put':
+        requestPromise = ApiService.put(endpoint, data);
+        break;
+      case 'delete':
+        requestPromise = ApiService.delete(endpoint);
+        break;
+      case 'patch':
+        requestPromise = ApiService.patch(endpoint, data);
+        break;
+      default:
+        throw new Error(`Unsupported HTTP method: ${method}`);
+    }
+    
     await this.sendApiCall(requestPromise, tag || endpoint, listener);
     return requestPromise;
   }

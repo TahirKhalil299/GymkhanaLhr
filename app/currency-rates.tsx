@@ -165,6 +165,20 @@ const CurrencyRates: React.FC<CurrencyRatesProps> = ({ onBack }) => {
     }
   };
 
+  const handleHomePress = () => {
+    console.log('Home pressed - navigating to home');
+    try {
+      router.push('/home'); // Navigate to home screen
+    } catch (error) {
+      console.error('Home navigation error:', error);
+    }
+  };
+
+  const handleCurrencyRatesPress = () => {
+    console.log('Currency rates pressed - already on currency rates screen, doing nothing');
+    // Do nothing since we're already on the currency rates screen
+  };
+
   return (
     <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
       <StatusBar backgroundColor="#f8f9fa" barStyle="dark-content" />
@@ -194,31 +208,54 @@ const CurrencyRates: React.FC<CurrencyRatesProps> = ({ onBack }) => {
         )}
       </ScrollView>
 
-      {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.navItem}>
-          <Text style={styles.navIcon}>📋</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={styles.navItem}
-          onPress={() => router.replace('/CurrencyRates')}
-        >
-          <Text style={styles.navIcon}>💱</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={styles.navItem}
-          onPress={() => router.replace('/home')}
-        >
-          <Text style={styles.navIcon}>⊞</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Text style={styles.navIcon}>🤝</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Text style={styles.navIcon}>🌐</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+     {/* Bottom Navigation */}
+         <View style={[styles.bottomNav, { paddingBottom: insets.bottom > 0 ? insets.bottom : 15 }]}>
+           <TouchableOpacity style={styles.navItem}>
+             <Image
+               source={require('../assets/images/deal-details.png')}
+               style={styles.navIcon}
+               resizeMode="contain"
+             />
+           </TouchableOpacity>
+           
+           {/* Currency Exchange - Active/Highlighted */}
+           <TouchableOpacity
+             style={[styles.navItem, styles.activeNavItem]}
+             onPress={handleCurrencyRatesPress}
+           >
+             <View style={styles.activeNavBackground}>
+               <Image
+                 source={require('../assets/images/currency-rates.png')}
+                 style={[styles.navIcon, styles.activeNavIcon]}
+                 resizeMode="contain"
+               />
+             </View>
+           </TouchableOpacity>
+           
+           {/* Home Button */}
+           <TouchableOpacity 
+             style={styles.navItem}
+             onPress={handleHomePress}
+           >
+             <Ionicons name="apps" size={24} color="#666666" />
+           </TouchableOpacity>
+           
+           <TouchableOpacity style={styles.navItem}>
+             <Image
+               source={require('../assets/images/book-deal.png')}
+               style={styles.navIcon}
+               resizeMode="contain"
+             />
+           </TouchableOpacity>
+           <TouchableOpacity style={styles.navItem}>
+             <Image
+               source={require('../assets/images/network.png')}
+               style={styles.navIcon}
+               resizeMode="contain"
+             />
+           </TouchableOpacity>
+         </View>
+       </View>
   );
 };
 
@@ -361,7 +398,20 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   navIcon: {
-    fontSize: 20,
+    width: 24,
+    height: 24,
+    tintColor: '#666666', // Default color for inactive icons
+  },
+  activeNavItem: {
+    // Additional styles for active nav item if needed
+  },
+  activeNavBackground: {
+    backgroundColor: '#ffe5db',
+    borderRadius: 20,
+    padding: 12,
+  },
+  activeNavIcon: {
+    tintColor: '#ff6b35', // Orange color for active currency exchange icon
   },
 });
 

@@ -530,7 +530,7 @@ export default function HomeScreen() {
           onPress={() => {
             console.log('Currency rates bottom nav pressed');
             try {
-              router.replace('/currency-rates');
+              router.push('/currency-rates');
               console.log('Bottom nav navigation attempted');
             } catch (error) {
               console.error('Bottom nav navigation error:', error);
@@ -555,7 +555,17 @@ export default function HomeScreen() {
             resizeMode="contain"
           />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
+        <TouchableOpacity   style={styles.navItem}
+          onPress={() => {
+            console.log('Currency rates bottom nav pressed');
+            try {
+              router.push('/network');
+              console.log('Bottom nav navigation attempted');
+            } catch (error) {
+              console.error('Bottom nav navigation error:', error);
+            }
+          }
+        }>
           <Image
             source={require('../assets/images/network.png')}
             style={styles.navIcon}

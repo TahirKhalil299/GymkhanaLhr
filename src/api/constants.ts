@@ -26,6 +26,9 @@ export const ENDPOINTS = {
   CURRENCY: {
     GET_RATES: 'getCurrencyRates',
   },
+   NETWORK_BRANCHES: {
+    GET_BRANCHES: 'getDealBranches',
+  },
   USER: {
     PROFILE: 'api/user/profile',
     UPDATE_PROFILE: 'api/user/update',

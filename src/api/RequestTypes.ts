@@ -3,6 +3,7 @@ enum RequestType {
   LOGOUT = 'LOGOUT',
   REFRESH_TOKEN = 'REFRESH_TOKEN',
   GET_RATE_LIST = 'GET_RATE_LIST',
+    GET_BRANCHES_NAME = 'GET_BRANCHES_NAME'
 }
 
 export default RequestType;

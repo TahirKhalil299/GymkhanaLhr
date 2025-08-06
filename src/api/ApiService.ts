@@ -56,6 +56,22 @@ const ApiService = {
     return ApiClient.get(`${ENDPOINTS.CURRENCY.GET_RATES}?${queryParams.toString()}`);
   },
 
+
+
+
+  getBranchesList: (): Promise<ApiResponse> => {
+    const queryParams = new URLSearchParams({
+      User_ID: API_CREDENTIALS.userId,
+      User_Password: API_CREDENTIALS.userPassword,
+      Auth_Token: API_CREDENTIALS.authToken,
+      Customer_Code: API_CREDENTIALS.customerCode,
+    });
+
+       return ApiClient.get(`${ENDPOINTS.NETWORK_BRANCHES.GET_BRANCHES}?${queryParams.toString()}`);
+  },
+
+
+
   // User endpoints
   getUserProfile: (): Promise<ApiResponse<UserProfile>> => 
     ApiClient.get(ENDPOINTS.USER.PROFILE),

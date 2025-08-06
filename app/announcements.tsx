@@ -1,6 +1,7 @@
 
-import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+
 import React, { useState } from 'react';
 import {
   ScrollView,
@@ -107,7 +108,9 @@ const NewsAnnouncementsScreen: React.FC<Props> = ({ onBack }) => {
             }
           }}
         >
-          <Ionicons name="chevron-back" size={24} color="#333" />
+          {  <Icon name="arrow-back" size={24} color="#000" />  /* <Ionicons name="chevron-back" size={24} color="#333" /> */}
+
+                
         </TouchableOpacity>
         
         <Text style={styles.headerTitle}>News & Announcements</Text>

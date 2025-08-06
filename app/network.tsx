@@ -250,7 +250,7 @@ const NetworkScreen: React.FC<NetworkScreenProps> = ({
           <Icon name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
         <Text style={styles.title}>Network</Text>
-        <TouchableOpacity 
+        {/* <TouchableOpacity 
           style={styles.refreshButton}
           onPress={() => {
             console.log('🔄 Refresh button pressed');
@@ -258,7 +258,7 @@ const NetworkScreen: React.FC<NetworkScreenProps> = ({
           }}
         >
           <Icon name="refresh" size={24} color="#000" />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
       <FlatList
         data={displayData}

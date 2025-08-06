@@ -305,7 +305,7 @@ export default function HomeScreen() {
       onPress: () => {
         console.log('FAQs pressed');
         // Add navigation or functionality here
-        // router.push('/faqs');
+        router.push('/faq');
       }
     },
     {

@@ -1,13 +1,13 @@
 import { useNavigation } from '@react-navigation/native';
 import React from 'react';
 import {
-    Alert,
-    Linking,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  Linking,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -123,8 +123,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
+    backgroundColor: '#f5f5f5',
     borderBottomColor: '#e0e0e0',
   },
   backButton: {
@@ -185,7 +184,7 @@ const styles = StyleSheet.create({
   },
   getInTouchButton: {
     backgroundColor: '#1a237e',
-    paddingVertical: 16,
+    paddingVertical: 11,
     paddingHorizontal: 24,
     borderRadius: 8,
     alignItems: 'center',
@@ -193,7 +192,7 @@ const styles = StyleSheet.create({
   },
   getInTouchText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
   },
   socialItem: {

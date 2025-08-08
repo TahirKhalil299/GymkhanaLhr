@@ -25,7 +25,7 @@ export class UserDataManager {
       console.log('UserDataManager: User data string retrieved:', userDataString ? 'exists' : 'null');
       if (userDataString) {
         const parsedData = JSON.parse(userDataString);
-        console.log('UserDataManager: Parsed user data:', parsedData);
+       // console.log('UserDataManager: Parsed user data:', parsedData);
         return parsedData;
       }
       return null;

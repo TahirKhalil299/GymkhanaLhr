@@ -81,33 +81,33 @@ export default function HomeScreen() {
         console.log('Currency rates request started');
       },
       onRequestSuccess: async (response, data, tag) => {
-        console.log('Currency rates successful:', data);
+       // console.log('Currency rates successful:', data);
         try {
           const responseData = JSON.parse(data);
-          console.log('Parsed currency rates data:', responseData);
+       //   console.log('Parsed currency rates data:', responseData);
 
           // Check if the response has the correct structure
           if (responseData.data && responseData.data.Rates && Array.isArray(responseData.data.Rates)) {
             // Take only first 4 items as requested
             const firstFourRates = responseData.data.Rates.slice(0, 4);
             setCurrencies(firstFourRates);
-            console.log('Currency rates set:', firstFourRates);
+          //  console.log('Currency rates set:', firstFourRates);
           } else if (responseData.Rates && Array.isArray(responseData.Rates)) {
             // Fallback for direct Rates array
             const firstFourRates = responseData.Rates.slice(0, 4);
             setCurrencies(firstFourRates);
-            console.log('Currency rates set (fallback):', firstFourRates);
+        //    console.log('Currency rates set (fallback):', firstFourRates);
           } else {
             console.log('No rates data found in response');
             setCurrencies([]);
           }
         } catch (error) {
-          console.error('Error processing currency rates response:', error);
+     //     console.error('Error processing currency rates response:', error);
           setCurrencies([]);
         }
       },
       onRequestFailure: (error, message, errors, tag) => {
-        console.log('Currency rates failed:', message);
+    //    console.log('Currency rates failed:', message);
         setCurrencies([]);
       },
       onRequestEnded: () => {
@@ -115,7 +115,7 @@ export default function HomeScreen() {
         setIsLoading(false);
       },
       onError: (response, message, tag) => {
-        console.log('Currency rates error:', message);
+    //    console.log('Currency rates error:', message);
         setCurrencies([]);
         setIsLoading(false);
       }
@@ -162,7 +162,7 @@ export default function HomeScreen() {
 
       const accessToken = await UserDataManager.getAccessToken();
       const userData = await UserDataManager.getUserData();
-      console.log('Individual checks - accessToken exists:', !!accessToken, 'userData exists:', !!userData);
+  //    console.log('Individual checks - accessToken exists:', !!accessToken, 'userData exists:', !!userData);
 
       if (!isLoggedIn) {
         console.log('Not logged in, redirecting to login');
@@ -171,7 +171,7 @@ export default function HomeScreen() {
       }
 
       console.log('User is logged in, getting user data...');
-      console.log('User data:', userData);
+    //  console.log('User data:', userData);
 
       if (userData && userData.C_Name) {
         setUserName(userData.C_Name);
@@ -231,7 +231,7 @@ export default function HomeScreen() {
       onPress: () => {
         console.log('Deal Details pressed');
         // Add navigation or functionality here
-        // router.push('/deal-details');
+         router.push('/deal-details');
       }
     },
     {
@@ -255,7 +255,7 @@ export default function HomeScreen() {
       onPress: () => {
         console.log('Book a Deal pressed');
         // Add navigation or functionality here
-        // router.push('/book-deal');
+        router.push('/BookDealScreen');
       }
     },
     {
@@ -295,7 +295,7 @@ export default function HomeScreen() {
       onPress: () => {
         console.log('Profile pressed');
         // Add navigation or functionality here
-        // router.push('/profile');
+        router.push('/profile');
       }
     },
     {
@@ -315,7 +315,7 @@ export default function HomeScreen() {
       onPress: () => {
         console.log('Update Password pressed');
         // Add navigation or functionality here
-        // router.push('/update-password');
+        router.push('/update-password');
       }
     },
     {

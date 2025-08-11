@@ -1,21 +1,20 @@
-import { useNavigation, useRoute } from '@react-navigation/native';
-import React, { useState } from 'react';
+import { useNavigation, useRoute } from "@react-navigation/native";
+import React, { useState } from "react";
 import {
-    Alert,
-    Image,
-    PermissionsAndroid,
-    Platform,
-    ScrollView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
-} from 'react-native';
-import RNHTMLtoPDF from 'react-native-html-to-pdf';
-import RNPrint from 'react-native-print';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+  Alert,
+  Image,
+  PermissionsAndroid,
+  Platform,
+  ScrollView,
+  StatusBar,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import RNHTMLtoPDF from "react-native-html-to-pdf";
+import RNPrint from "react-native-print";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Icon from "react-native-vector-icons/MaterialIcons";
 
 // Interface matching your Android Deals model
 interface Deal {
@@ -94,37 +93,37 @@ const DealPrintScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const route = useRoute();
-  
+
   // Parse the JSON string back to object
   const routeParams = route.params as RouteParams;
   let dealData: Deal = {};
-  
+
   try {
     if (routeParams?.dealData) {
       dealData = JSON.parse(routeParams.dealData);
-      console.log('Parsed deal data:', dealData); // Debug log
+      console.log("Parsed deal data:", dealData); // Debug log
     } else {
-      console.error('No deal data received in route params');
-      Alert.alert('Error', 'No deal data received');
+      console.error("No deal data received in route params");
+      Alert.alert("Error", "No deal data received");
     }
   } catch (error) {
-    console.error('Error parsing deal data:', error);
+    console.error("Error parsing deal data:", error);
     // Handle error - maybe show an alert or navigate back
-    Alert.alert('Error', 'Invalid deal data received');
+    Alert.alert("Error", "Invalid deal data received");
   }
 
   const [isGenerating, setIsGenerating] = useState(false);
 
   // Helper functions matching your Android Utils
   const formatDateString = (dateString: string | undefined): string => {
-    if (!dateString || dateString.trim() === '') return 'N/A';
+    if (!dateString || dateString.trim() === "") return "N/A";
     try {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return dateString; // Return original if invalid date
-      return date.toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
+      return date.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
       });
     } catch {
       return dateString;
@@ -132,11 +131,11 @@ const DealPrintScreen: React.FC = () => {
   };
 
   const formatNumber = (numString: string | undefined): string => {
-    if (!numString || numString.trim() === '') return '0.00';
+    if (!numString || numString.trim() === "") return "0.00";
     try {
       const num = parseFloat(numString);
       if (isNaN(num)) return numString;
-      return num.toLocaleString('en-US', {
+      return num.toLocaleString("en-US", {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       });
@@ -147,8 +146,12 @@ const DealPrintScreen: React.FC = () => {
 
   const orNA = (value: string | undefined): string => {
     // More thorough check for empty values
-    if (value === undefined || value === null || value.toString().trim() === '') {
-      return 'N/A';
+    if (
+      value === undefined ||
+      value === null ||
+      value.toString().trim() === ""
+    ) {
+      return "N/A";
     }
     return value.toString().trim();
   };
@@ -157,13 +160,13 @@ const DealPrintScreen: React.FC = () => {
   const getCompanyLogo = (): any => {
     // You can add logic here to select logo based on exchange name
     // For now, returning a default logo
-    return require('../assets/images/book-deal.png'); // Update with your actual logo path
+    return require("../assets/images/book-deal.png"); // Update with your actual logo path
   };
 
   // Get deal values based on type
   const getDealValues = () => {
-    console.log('Getting deal values for ROTypeID:', dealData?.ROTypeID); // Debug log
-    
+    console.log("Getting deal values for ROTypeID:", dealData?.ROTypeID); // Debug log
+
     if (dealData?.ROTypeID === "7") {
       const values = {
         currency: orNA(dealData?.PayINCurrID),
@@ -171,7 +174,7 @@ const DealPrintScreen: React.FC = () => {
         rate: formatNumber(dealData?.PayINRate),
         pkrAmount: formatNumber(dealData?.PayINPKR),
       };
-      console.log('PayIN values:', values); // Debug log
+      console.log("PayIN values:", values); // Debug log
       return values;
     } else {
       const values = {
@@ -180,7 +183,7 @@ const DealPrintScreen: React.FC = () => {
         rate: formatNumber(dealData?.PayOutRate),
         pkrAmount: formatNumber(dealData?.PayOutPKR),
       };
-      console.log('PayOut values:', values); // Debug log
+      console.log("PayOut values:", values); // Debug log
       return values;
     }
   };
@@ -189,12 +192,12 @@ const DealPrintScreen: React.FC = () => {
 
   // Generate HTML for PDF
   const generateHTML = (): string => {
-    const currentDate = new Date().toLocaleString('en-GB', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+    const currentDate = new Date().toLocaleString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
 
     return `
@@ -426,16 +429,16 @@ const DealPrintScreen: React.FC = () => {
 
   // Request storage permissions
   const requestStoragePermission = async (): Promise<boolean> => {
-    if (Platform.OS === 'android') {
+    if (Platform.OS === "android") {
       try {
         const granted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
           {
-            title: 'Storage Permission',
-            message: 'App needs access to storage to save PDF files',
-            buttonNeutral: 'Ask Me Later',
-            buttonNegative: 'Cancel',
-            buttonPositive: 'OK',
+            title: "Storage Permission",
+            message: "App needs access to storage to save PDF files",
+            buttonNeutral: "Ask Me Later",
+            buttonNegative: "Cancel",
+            buttonPositive: "OK",
           }
         );
         return granted === PermissionsAndroid.RESULTS.GRANTED;
@@ -450,11 +453,11 @@ const DealPrintScreen: React.FC = () => {
   // Show success dialog
   const showSuccessDialog = (filePath: string, onOpen: () => void) => {
     Alert.alert(
-      'Congratulations!',
+      "Congratulations!",
       `Report PDF downloaded successfully!\n\nSaved to: ${filePath}`,
       [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Open', onPress: onOpen },
+        { text: "Cancel", style: "cancel" },
+        { text: "Open", onPress: onOpen },
       ],
       { cancelable: false }
     );
@@ -464,35 +467,38 @@ const DealPrintScreen: React.FC = () => {
   const handleDownload = async () => {
     try {
       setIsGenerating(true);
-      
+
       const hasPermission = await requestStoragePermission();
       if (!hasPermission) {
-        Alert.alert('Permission Denied', 'Storage permission is required to save PDF files');
+        Alert.alert(
+          "Permission Denied",
+          "Storage permission is required to save PDF files"
+        );
         return;
       }
 
       const options = {
         html: generateHTML(),
-        fileName: `Deal_Report_${dealData?.DealNo || 'Unknown'}_${Date.now()}`,
-        directory: 'Downloads',
+        fileName: `Deal_Report_${dealData?.DealNo || "Unknown"}_${Date.now()}`,
+        directory: "Downloads",
         base64: false,
       };
 
       const pdf = await RNHTMLtoPDF.convert(options);
-      
-    //   if (pdf.filePath) {
-    //     showSuccessDialog(pdf.filePath, () => {
-    //       // Open PDF file
-    //       RNPrint.print({ filePath: pdf.filePath })
-    //         .catch((error) => {
-    //           console.log('Error opening PDF:', error);
-    //           Alert.alert('Error', 'Unable to open PDF file');
-    //         });
-    //     });
-    //   }
+
+      //   if (pdf.filePath) {
+      //     showSuccessDialog(pdf.filePath, () => {
+      //       // Open PDF file
+      //       RNPrint.print({ filePath: pdf.filePath })
+      //         .catch((error) => {
+      //           console.log('Error opening PDF:', error);
+      //           Alert.alert('Error', 'Unable to open PDF file');
+      //         });
+      //     });
+      //   }
     } catch (error) {
-      console.error('PDF Generation Error:', error);
-      Alert.alert('Error', `Failed to create PDF: ${error}`);
+      console.error("PDF Generation Error:", error);
+      Alert.alert("Error", `Failed to create PDF: ${error}`);
     } finally {
       setIsGenerating(false);
     }
@@ -502,21 +508,21 @@ const DealPrintScreen: React.FC = () => {
   const handlePrint = async () => {
     try {
       setIsGenerating(true);
-      
+
       const options = {
         html: generateHTML(),
-        fileName: `Deal_Report_${dealData?.DealNo || 'Unknown'}`,
-        directory: 'Cache',
+        fileName: `Deal_Report_${dealData?.DealNo || "Unknown"}`,
+        directory: "Cache",
       };
 
       const pdf = await RNHTMLtoPDF.convert(options);
-      
+
       if (pdf.filePath) {
         await RNPrint.print({ filePath: pdf.filePath });
       }
     } catch (error) {
-      console.error('Print Error:', error);
-      Alert.alert('Error', `Failed to print: ${error}`);
+      console.error("Print Error:", error);
+      Alert.alert("Error", `Failed to print: ${error}`);
     } finally {
       setIsGenerating(false);
     }
@@ -528,316 +534,167 @@ const DealPrintScreen: React.FC = () => {
 
   // Debug: Show current data in console
   React.useEffect(() => {
-    console.log('Current dealData:', dealData);
-    console.log('Sample values:');
-    console.log('DealNo:', dealData?.DealNo);
-    console.log('CompFName:', dealData?.CompFName);
-    console.log('PayINCurrID:', dealData?.PayINCurrID);
-    console.log('PayOutCurrID:', dealData?.PayOutCurrID);
+    console.log("Current dealData:", dealData);
+    console.log("Sample values:");
+    console.log("DealNo:", dealData?.DealNo);
+    console.log("CompFName:", dealData?.CompFName);
+    console.log("PayINCurrID:", dealData?.PayINCurrID);
+    console.log("PayOutCurrID:", dealData?.PayOutCurrID);
   }, [dealData]);
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View className="flex-1 bg-gray-100" style={{ paddingTop: insets.top,paddingBottom: insets.bottom }}>
       <StatusBar barStyle="dark-content" backgroundColor="#f5f5f5" />
-      
+
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
+      <View className="flex-row items-center px-4 py-3 bg-gray-100 shadow-md shadow-black/20">
+        <TouchableOpacity onPress={handleBackPress} className="p-2">
           <Icon name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Deal Details</Text>
-        <View style={styles.headerSpacer} />
+        <Text className="flex-1 text-xl font-semibold text-gray-800 text-center mr-8">
+          Deal Details
+        </Text>
+        <View className="w-8" />
       </View>
 
-      <ScrollView 
-        style={styles.scrollView}
+      <ScrollView
+        className="flex-1"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerClassName="p-4"
       >
         {/* Company Header */}
-        <View style={styles.companyHeader}>
-          <Image source={getCompanyLogo()} style={styles.logo} />
-          <View style={styles.companyInfo}>
-            <Text style={styles.companyName}>{orNA(dealData?.CompFName)}</Text>
-            <Text style={styles.companyAddress}>
+        <View className="flex-row bg-white p-4 rounded-lg mb-4 shadow-md shadow-black/20">
+          <Image source={getCompanyLogo()} className="w-16 h-16 mr-4" />
+          <View className="flex-1">
+            <Text className="text-lg font-bold text-[#661706] mb-1">
+              {orNA(dealData?.CompFName)}
+            </Text>
+            <Text className="text-xs text-gray-600 mb-0.5">
               {`${orNA(dealData?.BranchAddress1)} ${orNA(dealData?.BranchCity)} ${orNA(dealData?.BranchCountry)}`.trim()}
             </Text>
-            <Text style={styles.companyContact}>Tel: {orNA(dealData?.BranchTel1)}</Text>
-            <Text style={styles.companyContact}>Fax: {orNA(dealData?.BranchFax1)}</Text>
-            <Text style={styles.branchName}>{orNA(dealData?.BranchSName)}</Text>
+            <Text className="text-xs text-gray-600 mb-0.5">
+              Tel: {orNA(dealData?.BranchTel1)}
+            </Text>
+            <Text className="text-xs text-gray-600 mb-0.5">
+              Fax: {orNA(dealData?.BranchFax1)}
+            </Text>
+            <Text className="text-sm font-semibold text-gray-800 mt-1">
+              {orNA(dealData?.BranchSName)}
+            </Text>
           </View>
         </View>
 
         {/* Deal Details Form */}
-        <View style={styles.formContainer}>
+        <View className="bg-white rounded-lg mb-4 shadow-md shadow-black/20">
           {[
-            { label: 'Deal Date:', value: formatDateString(dealData?.DealDate) },
-            { label: 'Deal No:', value: orNA(dealData?.DealNo) },
-            { label: 'Customer Type:', value: orNA(dealData?.CTypeD) },
-            { label: 'Name:', value: orNA(dealData?.EXCompany) },
-            { label: 'Email ID:', value: orNA(dealData?.PartyEmail) },
-            { label: 'Address:', value: orNA(dealData?.PartyAddress1) },
-            { label: 'City:', value: orNA(dealData?.PartyCity) },
-            { label: 'Country:', value: orNA(dealData?.PartyCountry) },
-            { label: 'Special Instructions:', value: orNA(dealData?.PartyDealRemarks) },
-            { label: 'Transaction Type:', value: orNA(dealData?.ROTypeDD) },
-            { label: 'Settlement:', value: orNA(dealData?.StlD) },
-            { label: 'Bank Account:', value: orNA(dealData?.DetailCodeDescription) },
-            { label: 'Delivery From:', value: `${orNA(dealData?.DeliveryBranchSName)} , ${orNA(dealData?.DeliveryBranchCode)}` },
-            { label: 'Delivery At:', value: orNA(dealData?.DeliveryAt) },
+            {
+              label: "Deal Date:",
+              value: formatDateString(dealData?.DealDate),
+            },
+            { label: "Deal No:", value: orNA(dealData?.DealNo) },
+            { label: "Customer Type:", value: orNA(dealData?.CTypeD) },
+            { label: "Name:", value: orNA(dealData?.EXCompany) },
+            { label: "Email ID:", value: orNA(dealData?.PartyEmail) },
+            { label: "Address:", value: orNA(dealData?.PartyAddress1) },
+            { label: "City:", value: orNA(dealData?.PartyCity) },
+            { label: "Country:", value: orNA(dealData?.PartyCountry) },
+            {
+              label: "Special Instructions:",
+              value: orNA(dealData?.PartyDealRemarks),
+            },
+            { label: "Transaction Type:", value: orNA(dealData?.ROTypeDD) },
+            { label: "Settlement:", value: orNA(dealData?.StlD) },
+            {
+              label: "Bank Account:",
+              value: orNA(dealData?.DetailCodeDescription),
+            },
+            {
+              label: "Delivery From:",
+              value: `${orNA(dealData?.DeliveryBranchSName)} , ${orNA(dealData?.DeliveryBranchCode)}`,
+            },
+            { label: "Delivery At:", value: orNA(dealData?.DeliveryAt) },
           ].map((item, index) => (
-            <View key={index} style={styles.formRow}>
-              <Text style={styles.formLabel}>{item.label}</Text>
-              <Text style={styles.formValue}>{item.value}</Text>
+            <View
+              key={index}
+              className="flex-row border-b border-gray-200 py-3 px-4"
+            >
+              <Text className="flex-1 text-xs text-gray-600 font-medium">
+                {item.label}
+              </Text>
+              <Text className="flex-2 text-xs text-gray-800 font-semibold">
+                {item.value}
+              </Text>
             </View>
           ))}
         </View>
 
         {/* Transaction Table */}
-        <View style={styles.transactionContainer}>
-          <Text style={styles.sectionTitle}>Transaction Details</Text>
-          <View style={styles.transactionTable}>
-            <View style={styles.transactionHeader}>
-              <Text style={styles.tableHeaderText}>Foreign Currency</Text>
-              <Text style={styles.tableHeaderText}>Currency Amount</Text>
-              <Text style={styles.tableHeaderText}>Exchange Rate</Text>
-              <Text style={styles.tableHeaderText}>Value in PKR</Text>
+        <View className="bg-white rounded-lg p-4 mb-4 shadow-md shadow-black/20">
+          <Text className="text-base font-bold text-gray-800 mb-3">
+            Transaction Details
+          </Text>
+          <View className="border border-gray-300">
+            <View className="flex-row bg-gray-100">
+              <Text className="flex-1 text-xs font-bold text-gray-800 text-center py-2 px-1 border-r border-gray-300">
+                Foreign Currency
+              </Text>
+              <Text className="flex-1 text-xs font-bold text-gray-800 text-center py-2 px-1 border-r border-gray-300">
+                Currency Amount
+              </Text>
+              <Text className="flex-1 text-xs font-bold text-gray-800 text-center py-2 px-1 border-r border-gray-300">
+                Exchange Rate
+              </Text>
+              <Text className="flex-1 text-xs font-bold text-gray-800 text-center py-2 px-1">
+                Value in PKR
+              </Text>
             </View>
-            <View style={styles.transactionRow}>
-              <Text style={styles.tableCellText}>{dealValues.currency}</Text>
-              <Text style={styles.tableCellText}>{dealValues.amount}</Text>
-              <Text style={styles.tableCellText}>{dealValues.rate}</Text>
-              <Text style={styles.tableCellText}>{dealValues.pkrAmount}</Text>
+            <View className="flex-row bg-white">
+              <Text className="flex-1 text-[10px] text-gray-800 text-center py-2 px-1 border-r border-gray-300">
+                {dealValues.currency}
+              </Text>
+              <Text className="flex-1 text-[10px] text-gray-800 text-center py-2 px-1 border-r border-gray-300">
+                {dealValues.amount}
+              </Text>
+              <Text className="flex-1 text-[10px] text-gray-800 text-center py-2 px-1 border-r border-gray-300">
+                {dealValues.rate}
+              </Text>
+              <Text className="flex-1 text-[10px] text-gray-800 text-center py-2 px-1">
+                {dealValues.pkrAmount}
+              </Text>
             </View>
           </View>
         </View>
       </ScrollView>
 
       {/* Action Buttons */}
-      <View style={styles.buttonContainer}>
+      {/* Action Buttons */}
+      <View className="flex-row px-4 py-4 bg-gray-100 gap-3">
         <TouchableOpacity
-          style={[styles.actionButton, styles.downloadButton]}
+          className={`flex-1 flex-row items-center justify-center py-3 rounded-lg ${
+            isGenerating ? "bg-button_background/80" : "bg-button_background"
+          }`}
           onPress={handleDownload}
           disabled={isGenerating}
         >
           <Icon name="file-download" size={20} color="white" />
-          <Text style={styles.buttonText}>
-            {isGenerating ? 'Generating...' : 'Download'}
+          <Text className="text-button_text text-base font-bold ml-2">
+            {isGenerating ? "Generating..." : "Download"}
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.actionButton, styles.printButton]}
+          className="flex-1 flex-row items-center justify-center py-3 rounded-lg bg-button_background"
           onPress={handlePrint}
           disabled={isGenerating}
         >
           <Icon name="print" size={20} color="white" />
-          <Text style={styles.buttonText}>Print</Text>
+          <Text className="text-button_text text-base font-bold ml-2">
+            Print
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#f5f5f5',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.22,
-    shadowRadius: 2.22,
-  },
-  backButton: {
-    padding: 8,
-  },
-  headerTitle: {
-    flex: 1,
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#333',
-    textAlign: 'center',
-    marginRight: 32,
-  },
-  headerSpacer: {
-    width: 32,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: 16,
-  },
-  companyHeader: {
-    flexDirection: 'row',
-    backgroundColor: 'white',
-    padding: 16,
-    borderRadius: 8,
-    marginBottom: 16,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.22,
-    shadowRadius: 2.22,
-  },
-  logo: {
-    width: 60,
-    height: 60,
-    marginRight: 16,
-  },
-  companyInfo: {
-    flex: 1,
-  },
-  companyName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#661706',
-    marginBottom: 4,
-  },
-  companyAddress: {
-    fontSize: 12,
-    color: '#666',
-    marginBottom: 2,
-  },
-  companyContact: {
-    fontSize: 12,
-    color: '#666',
-    marginBottom: 2,
-  },
-  branchName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginTop: 4,
-  },
-  formContainer: {
-    backgroundColor: 'white',
-    borderRadius: 8,
-    marginBottom: 16,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.22,
-    shadowRadius: 2.22,
-  },
-  formRow: {
-    flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-  },
-  formLabel: {
-    flex: 1,
-    fontSize: 12,
-    color: '#666',
-    fontWeight: '500',
-  },
-  formValue: {
-    flex: 2,
-    fontSize: 12,
-    color: '#333',
-    fontWeight: '600',
-  },
-  transactionContainer: {
-    backgroundColor: 'white',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.22,
-    shadowRadius: 2.22,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 12,
-  },
-  transactionTable: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-  },
-  transactionHeader: {
-    flexDirection: 'row',
-    backgroundColor: '#f0f0f0',
-  },
-  transactionRow: {
-    flexDirection: 'row',
-    backgroundColor: 'white',
-  },
-  tableHeaderText: {
-    flex: 1,
-    fontSize: 11,
-    fontWeight: 'bold',
-    color: '#333',
-    textAlign: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 4,
-    borderRightWidth: 1,
-    borderRightColor: '#ccc',
-  },
-  tableCellText: {
-    flex: 1,
-    fontSize: 10,
-    color: '#333',
-    textAlign: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 4,
-    borderRightWidth: 1,
-    borderRightColor: '#ccc',
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    backgroundColor: '#f5f5f5',
-    gap: 12,
-  },
-  actionButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    borderRadius: 8,
-    gap: 8,
-  },
-  downloadButton: {
-    backgroundColor: '#2196F3',
-    marginBottom: 25,
-  },
-  printButton: {
-    backgroundColor: '#2196F3',
-     marginBottom: 25,
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-});
 
 export default DealPrintScreen;

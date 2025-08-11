@@ -5,16 +5,15 @@ import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Image,
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Alert,
+  Image,
+  Modal,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -439,29 +438,31 @@ const Profile = () => {
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View className="flex-1 bg-gray-100" style={{ paddingTop: insets.top }}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+      <View className="flex-row items-center px-4 py-3 ">
+        <TouchableOpacity onPress={handleBack} className="w-10 h-10 justify-center items-center">
           <MaterialIcons name="arrow-back" size={24} color="black" />
         </TouchableOpacity>
         
-        <Text style={styles.title}>Profile</Text>
+        <Text className="flex-1 text-center text-base font-semibold text-gray-800 mr-8">
+          Profile
+        </Text>
       </View>
 
       {/* Scrollable Content */}
       <ScrollView 
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
+        className="flex-1"
+        contentContainerStyle={{ paddingBottom: 24 }}
         showsVerticalScrollIndicator={true}
       >
         {/* Form Fields */}
-        <View style={styles.formContainer}>
+        <View className="px-5">
           {/* User ID */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>User ID</Text>
+          <View className="mt-2.5">
+            <Text className="text-xs font-medium text-gray-600 mb-1">User ID</Text>
             <TextInput
-              style={styles.input}
+              className="bg-white rounded border border-gray-300 p-2.5 text-xs text-black"
               value={formData.userId}
               onChangeText={(text) => setFormData({...formData, userId: text})}
               editable={false}
@@ -471,10 +472,10 @@ const Profile = () => {
           </View>
 
           {/* Email */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Email</Text>
+          <View className="mt-2.5">
+            <Text className="text-xs font-medium text-gray-600 mb-1">Email</Text>
             <TextInput
-              style={styles.input}
+              className="bg-white rounded border border-gray-300 p-2.5 text-xs text-black"
               value={formData.email}
               onChangeText={(text) => setFormData({...formData, email: text})}
               editable={false}
@@ -485,22 +486,22 @@ const Profile = () => {
           </View>
 
           {/* Title Dropdown */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Title</Text>
+          <View className="mt-2.5">
+            <Text className="text-xs font-medium text-gray-600 mb-1">Title</Text>
             <TouchableOpacity 
-              style={styles.input}
+              className="bg-white rounded border border-gray-300 p-2.5 flex-row justify-between items-center"
               onPress={() => showDropdownMenu('title')}
             >
-              <Text style={styles.inputText}>{formData.title || 'Select title'}</Text>
+              <Text className="text-xs text-black">{formData.title || 'Select title'}</Text>
               <MaterialIcons name="arrow-drop-down" size={24} color="black" />
             </TouchableOpacity>
           </View>
 
           {/* Full Name */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>First Name</Text>
+          <View className="mt-2.5">
+            <Text className="text-xs font-medium text-gray-600 mb-1">First Name</Text>
             <TextInput
-              style={styles.input}
+              className="bg-white rounded border border-gray-300 p-2.5 text-xs text-black"
               value={formData.fullName}
               onChangeText={(text) => setFormData({...formData, fullName: text})}
               placeholder="Enter first name"
@@ -509,10 +510,10 @@ const Profile = () => {
           </View>
 
           {/* Father Name */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Father Name</Text>
+          <View className="mt-2.5">
+            <Text className="text-xs font-medium text-gray-600 mb-1">Father Name</Text>
             <TextInput
-              style={styles.input}
+              className="bg-white rounded border border-gray-300 p-2.5 text-xs text-black"
               value={formData.fatherName}
               onChangeText={(text) => setFormData({...formData, fatherName: text})}
               placeholder="Enter father name"
@@ -521,22 +522,22 @@ const Profile = () => {
           </View>
 
           {/* Gender Dropdown */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Gender</Text>
+          <View className="mt-2.5">
+            <Text className="text-xs font-medium text-gray-600 mb-1">Gender</Text>
             <TouchableOpacity 
-              style={styles.input}
+              className="bg-white rounded border border-gray-300 p-2.5 flex-row justify-between items-center"
               onPress={() => showDropdownMenu('gender')}
             >
-              <Text style={styles.inputText}>{formData.gender || 'Select gender'}</Text>
+              <Text className="text-xs text-black">{formData.gender || 'Select gender'}</Text>
               <MaterialIcons name="arrow-drop-down" size={24} color="black" />
             </TouchableOpacity>
           </View>
 
           {/* CNIC */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>CNIC</Text>
+          <View className="mt-2.5">
+            <Text className="text-xs font-medium text-gray-600 mb-1">CNIC</Text>
             <TextInput
-              style={styles.input}
+              className="bg-white rounded border border-gray-300 p-2.5 text-xs text-black"
               value={formData.cnicNo}
               onChangeText={(text) => setFormData({...formData, cnicNo: text})}
               editable={false}
@@ -547,21 +548,21 @@ const Profile = () => {
           </View>
 
           {/* CNIC Expiry */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>CNIC Expiry Date</Text>
+          <View className="mt-2.5">
+            <Text className="text-xs font-medium text-gray-600 mb-1">CNIC Expiry Date</Text>
             <TouchableOpacity 
-              style={styles.input}
+              className="bg-white rounded border border-gray-300 p-2.5"
               onPress={() => showDatePickerDialog('cnicExpiry')}
             >
-              <Text style={styles.inputText}>{formData.cnicExpiry || 'Select expiry date'}</Text>
+              <Text className="text-xs text-black">{formData.cnicExpiry || 'Select expiry date'}</Text>
             </TouchableOpacity>
           </View>
 
           {/* Mobile Number */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Mobile Number</Text>
+          <View className="mt-2.5">
+            <Text className="text-xs font-medium text-gray-600 mb-1">Mobile Number</Text>
             <TextInput
-              style={styles.input}
+              className="bg-white rounded border border-gray-300 p-2.5 text-xs text-black"
               value={formData.mobileNo}
               onChangeText={(text) => setFormData({...formData, mobileNo: text})}
               editable={false}
@@ -572,33 +573,33 @@ const Profile = () => {
           </View>
 
           {/* Date of Birth */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Date of Birth</Text>
+          <View className="mt-2.5">
+            <Text className="text-xs font-medium text-gray-600 mb-1">Date of Birth</Text>
             <TouchableOpacity 
-              style={styles.input}
+              className="bg-white rounded border border-gray-300 p-2.5"
               onPress={() => showDatePickerDialog('dateOfBirth')}
             >
-              <Text style={styles.inputText}>{formData.dateOfBirth || 'Select date of birth'}</Text>
+              <Text className="text-xs text-black">{formData.dateOfBirth || 'Select date of birth'}</Text>
             </TouchableOpacity>
           </View>
 
           {/* Occupation Dropdown */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Occupation</Text>
+          <View className="mt-2.5">
+            <Text className="text-xs font-medium text-gray-600 mb-1">Occupation</Text>
             <TouchableOpacity 
-              style={styles.input}
+              className="bg-white rounded border border-gray-300 p-2.5 flex-row justify-between items-center"
               onPress={() => showDropdownMenu('occupation')}
             >
-              <Text style={styles.inputText}>{formData.occupation || 'Select occupation'}</Text>
+              <Text className="text-xs text-black">{formData.occupation || 'Select occupation'}</Text>
               <MaterialIcons name="arrow-drop-down" size={24} color="black" />
             </TouchableOpacity>
           </View>
 
           {/* Occupation Details */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Occupation Details</Text>
+          <View className="mt-2.5">
+            <Text className="text-xs font-medium text-gray-600 mb-1">Occupation Details</Text>
             <TextInput
-              style={[styles.input, { height: 80 }]}
+              className="bg-white rounded border border-gray-300 p-2.5 text-xs text-black h-20"
               value={formData.occupationDetails}
               onChangeText={(text) => setFormData({...formData, occupationDetails: text})}
               multiline={true}
@@ -608,10 +609,10 @@ const Profile = () => {
           </View>
 
           {/* Nationality */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Nationality</Text>
+          <View className="mt-2.5">
+            <Text className="text-xs font-medium text-gray-600 mb-1">Nationality</Text>
             <TextInput
-              style={styles.input}
+              className="bg-white rounded border border-gray-300 p-2.5 text-xs text-black"
               value={formData.nationality}
               onChangeText={(text) => setFormData({...formData, nationality: text})}
               editable={false}
@@ -621,35 +622,35 @@ const Profile = () => {
           </View>
 
           {/* Country Dropdown */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Country</Text>
+          <View className="mt-2.5">
+            <Text className="text-xs font-medium text-gray-600 mb-1">Country</Text>
             <TouchableOpacity 
-              style={styles.input}
+              className="bg-white rounded border border-gray-300 p-2.5 flex-row justify-between items-center"
               onPress={() => showDropdownMenu('country')}
             >
-              <Text style={styles.inputText}>{formData.countryOfStay || 'Select country'}</Text>
+              <Text className="text-xs text-black">{formData.countryOfStay || 'Select country'}</Text>
               <MaterialIcons name="arrow-drop-down" size={24} color="black" />
             </TouchableOpacity>
           </View>
 
           {/* Province Dropdown */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Province</Text>
+          <View className="mt-2.5">
+            <Text className="text-xs font-medium text-gray-600 mb-1">Province</Text>
             <TouchableOpacity 
-              style={styles.input}
+              className="bg-white rounded border border-gray-300 p-2.5 flex-row justify-between items-center"
               onPress={() => showDropdownMenu('province')}
               disabled={!formData.countryOfStay}
             >
-              <Text style={styles.inputText}>{formData.province || 'Select province'}</Text>
+              <Text className="text-xs text-black">{formData.province || 'Select province'}</Text>
               <MaterialIcons name="arrow-drop-down" size={24} color="black" />
             </TouchableOpacity>
           </View>
 
           {/* City */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>City</Text>
+          <View className="mt-2.5">
+            <Text className="text-xs font-medium text-gray-600 mb-1">City</Text>
             <TextInput
-              style={styles.input}
+              className="bg-white rounded border border-gray-300 p-2.5 text-xs text-black"
               value={formData.cityOfStay}
               onChangeText={(text) => setFormData({...formData, cityOfStay: text})}
               placeholder="Enter city"
@@ -658,10 +659,10 @@ const Profile = () => {
           </View>
 
           {/* Address */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Address</Text>
+          <View className="mt-2.5">
+            <Text className="text-xs font-medium text-gray-600 mb-1">Address</Text>
             <TextInput
-              style={[styles.input, { height: 80 }]}
+              className="bg-white rounded border border-gray-300 p-2.5 text-xs text-black h-20"
               value={formData.address}
               onChangeText={(text) => setFormData({...formData, address: text})}
               multiline={true}
@@ -671,15 +672,17 @@ const Profile = () => {
           </View>
 
           {/* CNIC Upload */}
-          <View style={styles.uploadContainer}>
+          <View className="bg-white rounded-lg p-2 mt-4 shadow-md">
             <TouchableOpacity 
-              style={styles.uploadContent}
+              className="flex-row items-center p-1.5"
               onPress={previewImageHandler}
             >
               {selectedImage || base64Image ? (
                 <>
                   <MaterialIcons name="check-circle" size={24} color="green" />
-                  <Text style={styles.uploadText}>CNIC Image Uploaded</Text>
+                  <Text className="text-xs font-medium text-black ml-1.5 p-1.5 flex-1">
+                    CNIC Image Uploaded
+                  </Text>
                   <TouchableOpacity onPress={removeImage}>
                     <MaterialIcons name="delete" size={24} color="red" />
                   </TouchableOpacity>
@@ -687,7 +690,9 @@ const Profile = () => {
               ) : (
                 <>
                   <MaterialIcons name="cloud-upload" size={24} color="black" />
-                  <Text style={styles.uploadText}>Upload Your CNIC</Text>
+                  <Text className="text-xs font-medium text-black ml-1.5 p-1.5 flex-1">
+                    Upload Your CNIC
+                  </Text>
                   <TouchableOpacity onPress={showImageOptions}>
                     <MaterialIcons name="add" size={24} color="black" />
                   </TouchableOpacity>
@@ -697,8 +702,13 @@ const Profile = () => {
           </View>
 
           {/* Submit Button */}
-          <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-            <Text style={styles.submitButtonText}>Complete Profile</Text>
+          <TouchableOpacity 
+            className="bg-button_background rounded-lg py-2.5 items-center justify-center mt-6 mb-6"
+            onPress={handleSubmit}
+          >
+            <Text className="text-base font-medium text-white">
+              Complete Profile
+            </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -722,22 +732,22 @@ const Profile = () => {
         animationType="slide"
         onRequestClose={() => setShowDropdown(false)}
       >
-        <View style={styles.dropdownOverlay}>
-          <View style={styles.dropdownContainer}>
+        <View className="flex-1 justify-end bg-black/50">
+          <View className="bg-white rounded-t-2xl p-4 max-h-1/2">
             {dropdownItems.map((item) => (
               <TouchableOpacity
                 key={item.id}
-                style={styles.dropdownItem}
+                className="py-4 border-b border-gray-100"
                 onPress={() => handleDropdownSelect(item)}
               >
-                <Text style={styles.dropdownItemText}>{item.name}</Text>
+                <Text className="text-base text-gray-800">{item.name}</Text>
               </TouchableOpacity>
             ))}
             <TouchableOpacity
-              style={styles.dropdownCancel}
+              className="py-4 mt-2 items-center bg-gray-100 rounded-lg"
               onPress={() => setShowDropdown(false)}
             >
-              <Text style={styles.dropdownCancelText}>Cancel</Text>
+              <Text className="text-base text-orange-600 font-bold">Cancel</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -750,16 +760,16 @@ const Profile = () => {
         animationType="fade"
         onRequestClose={() => setShowImagePreview(false)}
       >
-        <View style={styles.imagePreviewOverlay}>
+        <View className="flex-1 bg-black/90 justify-center items-center">
           <TouchableOpacity 
-            style={styles.imagePreviewClose}
+            className="absolute top-10 right-5 z-10"
             onPress={() => setShowImagePreview(false)}
           >
             <MaterialIcons name="close" size={30} color="white" />
           </TouchableOpacity>
           <Image 
             source={{ uri: previewImage }}
-            style={styles.imagePreview}
+            className="w-[90%] h-[80%]"
             resizeMode="contain"
           />
         </View>
@@ -767,172 +777,12 @@ const Profile = () => {
 
       {/* Loading Indicator */}
       {isLoading && (
-        <View style={styles.loadingOverlay}>
+        <View className="absolute inset-0 bg-black/30 justify-center items-center">
           <ActivityIndicator size="large" color="#ec7124" />
         </View>
       )}
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: 'white',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  title: {
-    flex: 1,
-    textAlign: 'center',
-    fontSize: 15,
-    fontFamily: 'Nunito-SemiBold',
-    color: '#333',
-    marginRight: 35,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 24,
-  },
-  formContainer: {
-    paddingHorizontal: 20,
-  },
-  inputContainer: {
-    marginTop: 10,
-  },
-  label: {
-    fontSize: 12,
-    fontFamily: 'Nunito-Medium',
-    color: '#666',
-    marginBottom: 4,
-  },
-  input: {
-    backgroundColor: 'white',
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    padding: 10,
-    fontSize: 12,
-    color: '#000',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  inputText: {
-    fontSize: 12,
-    color: '#000',
-  },
-  uploadContainer: {
-    backgroundColor: 'white',
-    borderRadius: 8,
-    padding: 8,
-    marginTop: 16,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  uploadContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 5,
-  },
-  uploadText: {
-    fontSize: 10,
-    fontFamily: 'Nunito-Medium',
-    color: '#000',
-    marginLeft: 5,
-    padding: 5,
-    flex: 1,
-  },
-  submitButton: {
-    backgroundColor: '#ec7124',
-    borderRadius: 8,
-    paddingVertical: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 24,
-    marginBottom: 24,
-  },
-  submitButtonText: {
-    fontSize: 16,
-    fontFamily: 'Nunito-Medium',
-    color: 'white',
-  },
-  dropdownOverlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  dropdownContainer: {
-    backgroundColor: 'white',
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    padding: 16,
-    maxHeight: '50%',
-  },
-  dropdownItem: {
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  dropdownItemText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  dropdownCancel: {
-    paddingVertical: 16,
-    marginTop: 8,
-    alignItems: 'center',
-    backgroundColor: '#f0f0f0',
-    borderRadius: 8,
-  },
-  dropdownCancelText: {
-    fontSize: 16,
-    color: '#ec7124',
-    fontWeight: 'bold',
-  },
-  imagePreviewOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.9)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  imagePreviewClose: {
-    position: 'absolute',
-    top: 40,
-    right: 20,
-    zIndex: 1,
-  },
-  imagePreview: {
-    width: '90%',
-    height: '80%',
-  },
-  loadingOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-});
 
 export default Profile;

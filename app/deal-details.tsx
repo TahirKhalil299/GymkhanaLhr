@@ -4,7 +4,6 @@ import React from 'react';
 import {
   ScrollView,
   StatusBar,
-  StyleSheet,
   Text,
   TouchableOpacity,
   View,
@@ -83,7 +82,7 @@ interface Deal {
 
 const DealDetailsScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
-    const router = useRouter();
+  const router = useRouter();
   const navigation = useNavigation();
 
   // Sample data matching your Android logic
@@ -170,11 +169,11 @@ const DealDetailsScreen: React.FC = () => {
   const getStatusBackgroundColor = (status: string): string => {
     switch (status) {
       case 'Cleared':
-        return '#4CAF50';
+        return 'bg-green-500';
       case 'Pending':
-        return '#FF9800';
+        return 'bg-orange-500';
       default:
-        return '#F44336';
+        return 'bg-red-500';
     }
   };
 
@@ -206,12 +205,10 @@ const DealDetailsScreen: React.FC = () => {
 
   const handleViewDetails = (deal: Deal) => {
     console.log('View details for deal:', deal);
-    // Add your navigation logic here
-       router.push({
-    pathname: '/details',
-    params: { dealData: JSON.stringify(deal) }, // Pass only strings
-  });
-
+    router.push({
+      pathname: '/details',
+      params: { dealData: JSON.stringify(deal) }, // Pass only strings
+    });
   };
 
   const renderDealCard = (deal: Deal, index: number) => {
@@ -219,239 +216,82 @@ const DealDetailsScreen: React.FC = () => {
     const statusColor = getStatusBackgroundColor(deal.TrLevelD || '');
 
     return (
-      <View key={index} style={styles.dealCard}>
+      <View key={index} className="bg-white rounded-xl p-4 mb-4 shadow-md shadow-black/25">
         {/* Header Row */}
-        <View style={styles.headerRow}>
-          <View style={styles.dealTypeContainer}>
-            <Text style={styles.dealTypeLabel}>Deal Type : </Text>
-            <Text style={styles.dealTypeValue}>{getDealStatus(deal)}</Text>
+        <View className="flex-row justify-between items-center mb-2">
+          <View className="flex-row items-center flex-1 mr-4">
+            <Text className="text-sm font-bold text-gray-800">Deal Type : </Text>
+            <Text className="text-sm font-medium text-gray-800">{getDealStatus(deal)}</Text>
           </View>
-          <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
-            <Text style={styles.statusText}>{deal.TrLevelD}</Text>
+          <View className={`${statusColor} px-3 py-1 rounded-full`}>
+            <Text className="text-white text-xs font-bold">{deal.TrLevelD}</Text>
           </View>
         </View>
 
         {/* Customer Info */}
-        <Text style={styles.customerName}>
+        <Text className="text-sm font-medium text-gray-800 mb-1">
           {toProperCase(deal.PartyTitle || '')} {toProperCase(deal.PartyName || '')}
         </Text>
-        <Text style={styles.idNumber}>
+        <Text className="text-xs font-medium text-gray-800 mb-1">
           {formatStringWithDashes(deal.PartyITypeRef || '')}
         </Text>
-        <Text style={styles.email}>{deal.PartyEmail}</Text>
-        <Text style={styles.date}>{formatDateString(deal.PDate || '')}</Text>
+        <Text className="text-xs font-medium text-gray-800 mb-1">{deal.PartyEmail}</Text>
+        <Text className="text-xs font-medium text-gray-800 mb-2">{formatDateString(deal.PDate || '')}</Text>
 
         {/* Divider */}
-        <View style={styles.divider} />
+        <View className="h-px bg-gray-300 my-3" />
 
         {/* Transaction Details */}
-        <View style={styles.transactionRow}>
-          <View style={styles.transactionColumn}>
-            <Text style={styles.transactionLabel}>FCY</Text>
-            <Text style={styles.transactionValue}>{dealValues.fcy}</Text>
+        <View className="flex-row justify-between mb-5">
+          <View className="flex-1 items-center">
+            <Text className="text-base font-bold text-gray-800 mb-2">FCY</Text>
+            <Text className="text-xs font-medium text-gray-800 text-center">{dealValues.fcy}</Text>
           </View>
-          <View style={styles.transactionColumn}>
-            <Text style={styles.transactionLabel}>Rate</Text>
-            <Text style={styles.transactionValue}>{dealValues.rate}</Text>
+          <View className="flex-1 items-center">
+            <Text className="text-base font-bold text-gray-800 mb-2">Rate</Text>
+            <Text className="text-xs font-medium text-gray-800 text-center">{dealValues.rate}</Text>
           </View>
-          <View style={styles.transactionColumn}>
-            <Text style={styles.transactionLabel}>Amount</Text>
-            <Text style={styles.transactionValue}>{dealValues.amount}</Text>
+          <View className="flex-1 items-center">
+            <Text className="text-base font-bold text-gray-800 mb-2">Amount</Text>
+            <Text className="text-xs font-medium text-gray-800 text-center">{dealValues.amount}</Text>
           </View>
         </View>
 
         {/* View Details Button */}
-        {/* View Details Button */}
-        <TouchableOpacity
-          style={styles.viewDetailsButton}
-          onPress={() => handleViewDetails && handleViewDetails(deal)}
-        >
-          <Icon name="description" size={20} color="white" style={styles.buttonIcon} />
-          <Text style={styles.viewDetailsText}>View Details</Text>
-        </TouchableOpacity>
-
-        
+    <TouchableOpacity
+  className="bg-button_background flex-row items-center justify-center py-2.5 rounded-xl"
+  onPress={() => handleViewDetails && handleViewDetails(deal)}
+>
+  <Icon name="description" size={25} color="white" className="mr-2" />
+ <Text className="text-button_text text-[14px] font-bold">View Details</Text>
+</TouchableOpacity>
       </View>
     );
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View className="flex-1 bg-gray-100" style={{ paddingTop: insets.top , paddingBottom: insets.bottom }}>
       <StatusBar barStyle="dark-content" backgroundColor="#f5f5f5" />
       
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
+      <View className="flex-row items-center px-4 py-3 bg-gray-100 shadow-md shadow-black/10">
+        <TouchableOpacity onPress={handleBackPress} className="p-2">
           <Icon name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Deal Details</Text>
-        <View style={styles.headerSpacer} />
+        <Text className="flex-1 text-xl font-semibold text-gray-800 text-center mr-8">Deal Details</Text>
+        <View className="w-8" />
       </View>
 
       {/* Deal Cards */}
       <ScrollView 
-        style={styles.scrollView}
+        className="flex-1"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerClassName="p-4"
       >
         {sampleDeals.map((deal, index) => renderDealCard(deal, index))}
       </ScrollView>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#f5f5f5',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.22,
-    shadowRadius: 2.22,
-  },
-  backButton: {
-    padding: 8,
-  },
-  headerTitle: {
-    flex: 1,
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#333',
-    textAlign: 'center',
-    marginRight: 32, // Compensate for back button
-  },
-  headerSpacer: {
-    width: 32,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: 16,
-  },
-  dealCard: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  dealTypeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    marginRight: 16,
-  },
-  dealTypeLabel: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#333',
-  },
-  dealTypeValue: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#333',
-  },
-  statusBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  statusText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  customerName: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#333',
-    marginBottom: 4,
-  },
-  idNumber: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: '#333',
-    marginBottom: 4,
-  },
-  email: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: '#333',
-    marginBottom: 4,
-  },
-  date: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: '#333',
-    marginBottom: 8,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#e0e0e0',
-    marginVertical: 12,
-  },
-  transactionRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  transactionColumn: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  transactionLabel: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#333',
-    marginBottom: 8,
-  },
-  transactionValue: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: '#333',
-    textAlign: 'center',
-  },
-  viewDetailsButton: {
-    backgroundColor: '#3f51b5',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    borderRadius: 12,
-  },
-  buttonIcon: {
-    marginRight: 8,
-  },
-  viewDetailsText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-});
 
 export default DealDetailsScreen;

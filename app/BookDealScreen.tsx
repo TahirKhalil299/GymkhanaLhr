@@ -1,5 +1,6 @@
-import { useNavigation } from '@react-navigation/native';
-import React, { useRef, useState } from 'react';
+import { useNavigation } from "@react-navigation/native";
+import { useRouter } from "expo-router";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Alert,
   Animated,
@@ -7,58 +8,67 @@ import {
   Keyboard,
   SafeAreaView,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
-} from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import RatesBottomSheet from './components/RatesBottomSheet';
-import { Rate } from './type';
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Icon from "react-native-vector-icons/MaterialIcons";
+import RatesBottomSheet from "./components/RatesBottomSheet";
+import { Rate } from "./type";
 
 const BookDealScreen: React.FC = () => {
   const navigation = useNavigation();
+  const router = useRouter();
   const insets = useSafeAreaInsets();
-  const [activeTab, setActiveTab] = useState<'buy' | 'sell'>('buy');
-  const [amount, setAmount] = useState<string>('');
-  const [selectedCurrency, setSelectedCurrency] = useState<Rate | null>(null);
-  const [convertedAmount, setConvertedAmount] = useState<string>('0.00');
+  const [activeTab, setActiveTab] = useState<"buy" | "sell">("buy");
+  const [amount, setAmount] = useState<string>("");
+  const [convertedAmount, setConvertedAmount] = useState<string>("0.00");
   const [showAlert, setShowAlert] = useState<boolean>(false);
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
-  
+
   const bottomSheetRef = useRef<any>(null);
+
+  // Track selected currencies separately for buy and sell
+  const [buyCurrency, setBuyCurrency] = useState<Rate | null>(null);
+  const [sellCurrency, setSellCurrency] = useState<Rate | null>(null);
+  const [selectedCurrency, setSelectedCurrency] = useState<Rate | null>(null);
 
   // Mock data for rates
   const mockRates: Rate[] = [
     {
-      id: '1',
-      currency: 'USD',
-      countryName: 'United States',
+      id: "1",
+      currency: "USD",
+      countryName: "United States",
       buyRate: 285.85,
-      sellRate: 288.00,
-      imagePath: 'https://flagcdn.com/w320/us.png',
+      sellRate: 288.0,
+      imagePath: "https://flagcdn.com/w320/us.png",
     },
     {
-      id: '2',
-      currency: 'GBP',
-      countryName: 'United Kingdom',
+      id: "2",
+      currency: "GBP",
+      countryName: "United Kingdom",
       buyRate: 0.73,
       sellRate: 0.75,
-      imagePath: 'https://flagcdn.com/w320/gb.png',
+      imagePath: "https://flagcdn.com/w320/gb.png",
     },
     {
-      id: '3',
-      currency: 'EUR',
-      countryName: 'Europe',
+      id: "3",
+      currency: "EUR",
+      countryName: "Europe",
       buyRate: 0.85,
       sellRate: 0.87,
-      imagePath: 'https://flagcdn.com/w320/eu.png',
+      imagePath: "https://flagcdn.com/w320/eu.png",
     },
   ];
 
-  React.useEffect(() => {
+  // Update selected currency based on active tab
+  useEffect(() => {
+    setSelectedCurrency(activeTab === "buy" ? buyCurrency : sellCurrency);
+  }, [activeTab, buyCurrency, sellCurrency]);
+
+  useEffect(() => {
     if (showAlert) {
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -70,11 +80,10 @@ const BookDealScreen: React.FC = () => {
     }
   }, [showAlert]);
 
-  const handleTabPress = (tab: 'buy' | 'sell') => {
+  const handleTabPress = (tab: "buy" | "sell") => {
     setActiveTab(tab);
-    setSelectedCurrency(null);
-    setConvertedAmount('0.00');
-    setAmount('');
+    setAmount("");
+    setConvertedAmount("0.00");
   };
 
   const handleFromPress = () => {
@@ -83,24 +92,31 @@ const BookDealScreen: React.FC = () => {
   };
 
   const handleRateSelect = (rate: Rate) => {
-    setSelectedCurrency(rate);
+    if (activeTab === "buy") {
+      setBuyCurrency(rate);
+    } else {
+      setSellCurrency(rate);
+    }
     calculateConversion();
   };
 
   const calculateConversion = () => {
-    if (selectedCurrency && amount && amount !== '') {
+    if (selectedCurrency && amount && amount !== "") {
       const numAmount = parseFloat(amount);
-      const rate = activeTab === 'buy' ? selectedCurrency.buyRate : selectedCurrency.sellRate;
+      const rate =
+        activeTab === "buy"
+          ? selectedCurrency.buyRate
+          : selectedCurrency.sellRate;
       const converted = numAmount * rate;
       setConvertedAmount(converted.toFixed(2));
     } else {
-      setConvertedAmount('0.00');
+      setConvertedAmount("0.00");
     }
   };
 
   const handleConvert = () => {
-    if (!selectedCurrency || !amount || amount === '') {
-      Alert.alert('Error', 'Please enter an amount to convert');
+    if (!selectedCurrency || !amount || amount === "") {
+      Alert.alert("Error", "Please enter an amount to convert");
       return;
     }
 
@@ -110,7 +126,8 @@ const BookDealScreen: React.FC = () => {
 
   const handleConfirm = () => {
     setShowAlert(false);
-    Alert.alert('Success', 'Deal confirmed successfully!');
+    console.log("Deal confirmed successfully!");
+    router.push("/SelectBranch");
   };
 
   const handleCancel = () => {
@@ -118,174 +135,238 @@ const BookDealScreen: React.FC = () => {
   };
 
   const handleAmountChange = (text: string) => {
-    const cleanedText = text.replace(/[^0-9.]/g, '');
-    const decimalCount = cleanedText.split('.').length - 1;
+    const cleanedText = text.replace(/[^0-9.]/g, "");
+    const decimalCount = cleanedText.split(".").length - 1;
     if (decimalCount <= 1) {
       setAmount(cleanedText);
     }
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     calculateConversion();
   }, [amount, selectedCurrency, activeTab]);
 
+  // Clear selections when leaving screen
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("blur", () => {
+      setBuyCurrency(null);
+      setSellCurrency(null);
+      setSelectedCurrency(null);
+      setAmount("");
+      setConvertedAmount("0.00");
+    });
+    return unsubscribe;
+  }, [navigation]);
+
   return (
-    <SafeAreaView style={[styles.container, { paddingTop: insets.top }]}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.header}>
+    <SafeAreaView
+      className="flex-1 bg-slate-50"
+      style={{ paddingTop: insets.top }}
+    >
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: 20 }}
+      >
+        {/* Header */}
+        <View className="flex-row items-center justify-between px-4 py-3 border-gray-200">
           <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}>
+            className="w-10 h-10 items-center justify-center"
+            onPress={() => navigation.goBack()}
+          >
             <Icon name="arrow-back" size={24} color="#333" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Book a Deal</Text>
-          <View style={styles.backButton} />
+          <Text className="text-lg font-semibold text-gray-800">
+            Book a Deal
+          </Text>
+          <View className="w-10 h-10" />
         </View>
 
-        <View style={styles.tabContainer}>
+        {/* Tab Container */}
+        <View className="flex-row mx-4 mt-5 bg-gray-200 rounded-xl p-0.5">
           <TouchableOpacity
-            style={[
-              styles.tab,
-              activeTab === 'buy' && styles.activeTab,
-            ]}
-            onPress={() => handleTabPress('buy')}>
+            className={`flex-1 py-2 items-center rounded-lg ${
+              activeTab === "buy" ? "bg-button_background" : ""
+            }`}
+            onPress={() => handleTabPress("buy")}
+          >
             <Text
-              style={[
-                styles.tabText,
-                activeTab === 'buy' && styles.activeTabText,
-              ]}>
+              className={`text-sm font-medium ${
+                activeTab === "buy" ? "text-white" : "text-gray-600"
+              }`}
+            >
               Buy
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[
-              styles.tab,
-              activeTab === 'sell' && styles.activeTab,
-            ]}
-            onPress={() => handleTabPress('sell')}>
+            className={`flex-1 py-2 items-center rounded-lg ${
+              activeTab === "sell" ? "bg-button_background" : ""
+            }`}
+            onPress={() => handleTabPress("sell")}
+          >
             <Text
-              style={[
-                styles.tabText,
-                activeTab === 'sell' && styles.activeTabText,
-              ]}>
+              className={`text-sm font-medium ${
+                activeTab === "sell" ? "text-white" : "text-gray-600"
+              }`}
+            >
               Sell
             </Text>
           </TouchableOpacity>
         </View>
 
-        <View style={styles.content}>
-          <View style={styles.currencySection}>
-            <Text style={styles.sectionTitle}>
-              {selectedCurrency?.currency || 'Select Currency'}
-            </Text>
-            <TouchableOpacity 
-              style={styles.currencySelector}
-              onPress={handleFromPress}
-            >
-              {selectedCurrency ? (
-                <View style={styles.currencyInfo}>
-                  <Image
-                    source={{ uri: selectedCurrency.imagePath }}
-                    style={styles.flagImage}
-                  />
-                  <Text style={styles.currencyName}>{selectedCurrency.currency}</Text>
-                </View>
-              ) : (
-                <Text style={styles.selectText}>Select {activeTab === 'buy' ? 'Buy' : 'Sell'}</Text>
-              )}
-              <Icon name="keyboard-arrow-down" size={24} color="#666" />
-            </TouchableOpacity>
-            
-            <Text style={styles.amountLabel}>Amount</Text>
-            <TextInput
-              style={styles.amountInput}
-              value={amount}
-              onChangeText={handleAmountChange}
-              placeholder="0"
-              placeholderTextColor="#999"
-              keyboardType="numeric"
-              returnKeyType="done"
-            />
-          </View>
-
-          <View style={styles.divider} />
-
-          <View style={styles.currencySection}>
-            <Text style={styles.sectionTitle}>PKR</Text>
-            <View style={styles.currencyInfo}>
-              <Image
-                source={{ uri: 'https://flagcdn.com/w320/pk.png' }}
-                style={styles.flagImage}
-              />
-              <Text style={styles.currencyName}>PKR</Text>
+        {/* Content */}
+        <View className="flex-1 px-4 pt-6">
+          {/* Currency Row */}
+          <View className="flex-row justify-be  tween mb-4">
+            <View className="flex-1 mr-4">
+              <Text className="text-sm font-semibold text-gray-600 mb-2">
+                {selectedCurrency?.currency || "Select Currency"}
+              </Text>
+              <TouchableOpacity
+                className="flex-row items-center justify-between bg-white rounded-lg p-4 h-14"
+                onPress={handleFromPress}
+              >
+                {selectedCurrency ? (
+                  <View className="flex-row items-center">
+                    <Image
+                      source={{ uri: selectedCurrency.imagePath }}
+                      className="w-8 h-8 rounded-full mr-3"
+                    />
+                    <Text className="text-base font-semibold text-gray-800">
+                      {selectedCurrency.currency}
+                    </Text>
+                  </View>
+                ) : (
+                  <Text className="text-base text-gray-400">
+                    Select {activeTab === "buy" ? "Buy" : "Sell"}
+                  </Text>
+                )}
+                <Icon name="keyboard-arrow-down" size={24} color="#666" />
+              </TouchableOpacity>
             </View>
-            <Text style={styles.rateText}>
-              {selectedCurrency ? 
-                (activeTab === 'buy' ? selectedCurrency.buyRate : selectedCurrency.sellRate).toFixed(2) 
-                : '0.00'}
+
+            <View className="flex-1">
+              <Text className="text-sm font-semibold text-gray-600 mb-2">
+                Amount
+              </Text>
+              <TextInput
+                className="bg-white rounded-lg p-4 text-base text-gray-800 h-14 text-right"
+                value={amount}
+                onChangeText={handleAmountChange}
+                placeholder="0"
+                placeholderTextColor="#999"
+                keyboardType="numeric"
+                returnKeyType="done"
+              />
+            </View>
+          </View>
+
+          {/* Divider */}
+          <View className="h-px bg-gray-200 my-4" />
+
+          {/* PKR Section */}
+          <View className="mb-4">
+            <Text className="text-sm font-semibold text-gray-600 mb-2">
+              PKR
+            </Text>
+            <View className="flex-row items-center">
+              <Image
+                source={{ uri: "https://flagcdn.com/w320/pk.png" }}
+                className="w-8 h-8 rounded-full mr-3"
+              />
+              <Text className="text-base font-semibold text-gray-800">PKR</Text>
+            </View>
+            <Text className="text-base font-semibold text-orange-500 mt-2 text-right">
+              {selectedCurrency
+                ? (activeTab === "buy"
+                    ? selectedCurrency.buyRate
+                    : selectedCurrency.sellRate
+                  ).toFixed(2)
+                : "0.00"}
             </Text>
           </View>
 
-          <TouchableOpacity 
-            style={[
-              styles.convertButton,
-              (!selectedCurrency || !amount) && styles.disabledButton
-            ]} 
+          {/* Convert Button */}
+          <TouchableOpacity
+            className={`bg-button_background rounded-xl py-3 items-center mt-5 ${
+              !selectedCurrency || !amount ? "opacity-50" : ""
+            }`}
             onPress={handleConvert}
             disabled={!selectedCurrency || !amount}
           >
-            <Text style={styles.convertButtonText}>Convert</Text>
+            <Text className="text-base font-semibold text-white">Convert</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
 
+      {/* Alert Modal */}
       {showAlert && (
-        <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
-          <View style={styles.alertCard}>
-            <View style={styles.alertHeader}>
+        <Animated.View
+          className="absolute inset-0 bg-black/50 justify-center items-center px-4"
+          style={{ opacity: fadeAnim }}
+        >
+          <View className="bg-white rounded-2xl p-5 w-full shadow-2xl">
+            {/* Alert Header */}
+            <View className="flex-row items-center mb-4">
               <Icon
                 name="handshake"
                 size={40}
                 color="#FF6B35"
-                style={styles.handshakeIcon}
+                style={{ marginRight: 12 }}
               />
-              <Text style={styles.alertTitle}>Alert!</Text>
+              <Text className="text-lg font-bold text-gray-800">Alert!</Text>
             </View>
 
-            <View style={styles.alertContent}>
-              <View style={styles.alertRow}>
-                <View style={styles.alertColumn}>
-                  <Text style={styles.alertLabel}>From</Text>
-                  <Text style={styles.alertValue}>
+            {/* Alert Content */}
+            <View className="mt-2">
+              <View className="flex-row justify-between mb-5">
+                <View className="flex-1">
+                  <Text className="text-xs font-semibold text-gray-800 mb-1">
+                    From
+                  </Text>
+                  <Text className="text-sm font-bold text-gray-800">
                     {amount} {selectedCurrency?.currency}
                   </Text>
                 </View>
-                <View style={styles.alertColumn}>
-                  <Text style={styles.alertLabel}>To</Text>
-                  <Text style={styles.alertValue}>
+                <View className="flex-1">
+                  <Text className="text-xs font-semibold text-gray-800 mb-1">
+                    To
+                  </Text>
+                  <Text className="text-sm font-bold text-gray-800">
                     {convertedAmount} PKR
                   </Text>
                 </View>
-                <View style={styles.alertColumn}>
-                  <Text style={styles.alertLabel}>Rate</Text>
-                  <Text style={styles.alertValue}>
-                    {selectedCurrency ? 
-                      (activeTab === 'buy' ? selectedCurrency.buyRate : selectedCurrency.sellRate).toFixed(2) 
-                      : '0.00'}
+                <View className="flex-1">
+                  <Text className="text-xs font-semibold text-gray-800 mb-1">
+                    Rate
+                  </Text>
+                  <Text className="text-sm font-bold text-gray-800">
+                    {selectedCurrency
+                      ? (activeTab === "buy"
+                          ? selectedCurrency.buyRate
+                          : selectedCurrency.sellRate
+                        ).toFixed(2)
+                      : "0.00"}
                   </Text>
                 </View>
               </View>
 
-              <View style={styles.buttonRow}>
+              {/* Button Row */}
+              <View className="flex-row justify-between gap-3">
                 <TouchableOpacity
-                  style={[styles.button, styles.cancelButton]}
-                  onPress={handleCancel}>
-                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                  className="flex-1 py-3 border border-button_background rounded-lg items-center bg-white"
+                  onPress={handleCancel}
+                >
+                  <Text className="text-sm font-medium text-button_background">
+                    Cancel
+                  </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.button, styles.confirmButton]}
-                  onPress={handleConfirm}>
-                  <Text style={styles.confirmButtonText}>Confirm</Text>
+                  className="flex-1 py-3 bg-button_background rounded-lg items-center"
+                  onPress={handleConfirm}
+                >
+                  <Text className="text-sm font-medium text-white">
+                    Confirm
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -296,237 +377,11 @@ const BookDealScreen: React.FC = () => {
       <RatesBottomSheet
         ref={bottomSheetRef}
         rates={mockRates}
-        isForBuying={activeTab === 'buy'}
+        isForBuying={activeTab === "buy"}
         onRateSelect={handleRateSelect}
       />
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F5F7FD',
-  },
-  scrollContainer: {
-    flexGrow: 1,
-    paddingBottom: 20,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#ffffff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-  },
-  tabContainer: {
-    flexDirection: 'row',
-    marginHorizontal: 16,
-    marginTop: 20,
-    backgroundColor: '#E5E5E5',
-    borderRadius: 12,
-    padding: 2,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 8,
-    alignItems: 'center',
-    borderRadius: 10,
-  },
-  activeTab: {
-    backgroundColor: '#FF6B35',
-  },
-  tabText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#666',
-  },
-  activeTabText: {
-    color: '#ffffff',
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingTop: 24,
-  },
-  currencySection: {
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#666',
-    marginBottom: 8,
-  },
-  currencySelector: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
-  },
-  currencyInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  flagImage: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    marginRight: 12,
-  },
-  currencyName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-  },
-  selectText: {
-    fontSize: 16,
-    color: '#999',
-  },
-  amountLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#666',
-    marginBottom: 8,
-  },
-  amountInput: {
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
-    padding: 16,
-    fontSize: 16,
-    color: '#333',
-  },
-  rateText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FF6B35',
-    marginTop: 8,
-    textAlign: 'right',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#E5E5E5',
-    marginVertical: 16,
-  },
-  convertButton: {
-    backgroundColor: '#FF6B35',
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  disabledButton: {
-    opacity: 0.5,
-  },
-  convertButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#ffffff',
-  },
-  overlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-  },
-  alertCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    padding: 20,
-    width: '100%',
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-  },
-  alertHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  handshakeIcon: {
-    marginRight: 12,
-  },
-  alertTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  alertContent: {
-    marginTop: 8,
-  },
-  alertRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  alertColumn: {
-    flex: 1,
-    alignItems: 'flex-start',
-  },
-  alertLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 4,
-  },
-  alertValue: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  button: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  cancelButton: {
-    backgroundColor: '#ffffff',
-    borderWidth: 1,
-    borderColor: '#FF6B35',
-  },
-  confirmButton: {
-    backgroundColor: '#FF6B35',
-  },
-  cancelButtonText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#FF6B35',
-  },
-  confirmButtonText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#ffffff',
-  },
-});
 
 export default BookDealScreen;

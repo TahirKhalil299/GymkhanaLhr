@@ -5,7 +5,6 @@ import {
   Animated,
   Dimensions,
   ScrollView,
-  StyleSheet,
   Text,
   TouchableOpacity,
   View,
@@ -40,40 +39,44 @@ const FAQItem: React.FC<FAQItemProps> = ({ item, index, isExpanded, onToggle }) 
   }, [isExpanded]);
 
   return (
-    <View style={styles.faqContainer}>
+    <View className="bg-white rounded-xl mb-3 shadow-sm shadow-black overflow-hidden">
       <TouchableOpacity
-        style={styles.questionContainer}
+        className="p-4"
         onPress={() => onToggle(index)}
         activeOpacity={0.7}
       >
-        <View style={styles.questionRow}>
-          <View style={styles.iconContainer}>
-            <Text style={styles.expandIcon}>
-              {isExpanded ? '−' : '+'}
-            </Text>
-          </View>
-          <Text style={styles.questionText} numberOfLines={2}>
-            {item.question}
-          </Text>
-        </View>
+    <View className="flex-row items-start">
+  <View className="w-6 h-6 rounded-full bg-gray-300 justify-center items-center mr-3 mt-0.5">
+    <Text 
+      className="text-base font-bold text-black"
+      style={{ 
+        lineHeight: 24, // Matches the circle height (h-6 = 24px)
+        textAlignVertical: 'center' 
+      }}
+    >
+      {isExpanded ? '−' : '+'}
+    </Text>
+  </View>
+  <Text className="flex-1 text-sm font-semibold text-gray-800 leading-5" numberOfLines={2}>
+    {item.question}
+  </Text>
+</View>
       </TouchableOpacity>
       
       <Animated.View 
-        style={[
-          styles.answerContainer,
-          {
-            opacity: animatedHeight,
-            maxHeight: animatedHeight.interpolate({
-              inputRange: [0, 1],
-              outputRange: [0, 200], // Adjust based on your content
-            }),
-          }
-        ]}
+        className="overflow-hidden"
+        style={{
+          opacity: animatedHeight,
+          maxHeight: animatedHeight.interpolate({
+            inputRange: [0, 1],
+            outputRange: [0, 200],
+          }),
+        }}
       >
         {isExpanded && (
-          <View style={styles.answerContent}>
-            <View style={styles.divider} />
-            <Text style={styles.answerText}>
+          <View className="flex-row px-4 pb-4 pt-2">
+            <View className="w-1 bg-button_background ml-2 mr-4 rounded-full min-h-5" />
+            <Text className="flex-1 text-xs text-gray-500 leading-[18px] font-normal">
               {item.answer}
             </Text>
           </View>
@@ -84,7 +87,7 @@ const FAQItem: React.FC<FAQItemProps> = ({ item, index, isExpanded, onToggle }) 
 };
 
 const FAQScreen: React.FC = () => {
-  const [expandedIndex, setExpandedIndex] = useState<number>(0); // First item expanded by default
+  const [expandedIndex, setExpandedIndex] = useState<number>(0);
   const scrollRef = useRef<ScrollView>(null);
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
@@ -134,7 +137,7 @@ const FAQScreen: React.FC = () => {
 
   const handleToggleExpand = (index: number): void => {
     if (expandedIndex === index) {
-      setExpandedIndex(-1); // Collapse if already expanded
+      setExpandedIndex(-1);
     } else {
       setExpandedIndex(index);
     }
@@ -145,30 +148,30 @@ const FAQScreen: React.FC = () => {
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View className="flex-1 bg-gray-50" style={{ paddingTop: insets.top }}>
       {/* Header */}
-      <View style={styles.header}>
+      <View className="flex-row items-center justify-between px-4 py-3">
         <TouchableOpacity 
-          style={styles.backButton}
+          className="w-10 h-10 justify-center items-center rounded-lg"
           onPress={handleGoBack}
           activeOpacity={0.7}
         >
-        <Icon name="arrow-back" size={24} color="#000" />
+          <Icon name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
         
-        <Text style={styles.title}>FAQs</Text>
+        <Text className="text-lg font-bold text-gray-800 text-center">FAQs</Text>
         
-        <View style={styles.placeholder} />
+        <View className="w-10" />
       </View>
 
       {/* FAQ List */}
       <ScrollView
         ref={scrollRef}
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
+        className="flex-1"
+        contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
       >
-        {faqData.map((item: FAQModel, index: number) => (
+        {faqData.map((item, index) => (
           <FAQItem
             key={item.id}
             item={item}
@@ -181,117 +184,5 @@ const FAQScreen: React.FC = () => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F8F9FA',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 8,
-  },
-  backArrow: {
-    fontSize: 24,
-    color: '#374151',
-    fontWeight: 'bold',
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1F2937',
-    textAlign: 'center',
-  },
-  placeholder: {
-    width: 40,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: 20,
-    paddingBottom: 40,
-  },
-  faqContainer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-    overflow: 'hidden',
-  },
-  questionContainer: {
-    padding: 16,
-  },
-  questionRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-  },
-  iconContainer: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#DBEAFE',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-    marginTop: 2,
-  },
-  expandIcon: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#2563EB',
-  },
-  questionText: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1F2937',
-    lineHeight: 20,
-  },
-  answerContainer: {
-    overflow: 'hidden',
-  },
-  answerContent: {
-    flexDirection: 'row',
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-    paddingTop: 8,
-  },
-  divider: {
-    width: 3,
-    backgroundColor: '#2563EB',
-    marginLeft: 10,
-    marginRight: 16,
-    borderRadius: 2,
-    minHeight: 20,
-  },
-  answerText: {
-    flex: 1,
-    fontSize: 13,
-    color: '#6B7280',
-    lineHeight: 18,
-    fontWeight: '400',
-  },
-});
 
 export default FAQScreen;

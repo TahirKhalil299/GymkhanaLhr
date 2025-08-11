@@ -1,15 +1,15 @@
 import { useNavigation } from '@react-navigation/native';
 import React, { useState } from 'react';
 import {
-    StatusBar,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  StatusBar,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { AppColors } from "../constants/theme";
 
 const UpdatePasswordScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -33,25 +33,26 @@ const UpdatePasswordScreen: React.FC = () => {
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View className="flex-1 bg-gray-50" style={{ paddingTop: insets.top }}>
       <StatusBar barStyle="dark-content" backgroundColor="#f8f8f8" />
       
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
+      <View className="flex-row items-center justify-between px-4 py-4 bg-gray-50">
+        <TouchableOpacity onPress={handleBackPress} className="w-10 h-10 justify-center items-center">
           <Icon name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Update Password</Text>
-        <View style={styles.headerRight} />
+        <Text className="text-xl font-semibold text-black">Update Password</Text>
+        <View className="w-10" />
       </View>
 
       {/* Content */}
-      <View style={styles.content}>
+      <View className="flex-1 px-4 pt-6">
         {/* Old Password Input */}
-        <View style={styles.inputContainer}>
+        <View className="mb-4 relative">
           <TextInput
-            style={styles.textInput}
+            className="border border-gray-300 rounded-xl px-4 py-4 text-base bg-white pr-12 text-black"
             placeholder="Old password"
+            selectionColor={AppColors.cursor_color}
             placeholderTextColor="#999"
             value={oldPassword}
             onChangeText={setOldPassword}
@@ -59,7 +60,7 @@ const UpdatePasswordScreen: React.FC = () => {
           />
           <TouchableOpacity
             onPress={() => setShowOldPassword(!showOldPassword)}
-            style={styles.eyeButton}
+            className="absolute right-3 top-3 p-1 w-8 h-8 justify-center items-center"
           >
             <Icon
               name={showOldPassword ? "visibility" : "visibility-off"}
@@ -70,10 +71,11 @@ const UpdatePasswordScreen: React.FC = () => {
         </View>
 
         {/* New Password Input */}
-        <View style={styles.inputContainer}>
+        <View className="mb-4 relative">
           <TextInput
-            style={styles.textInput}
+            className="border border-gray-300 rounded-xl px-4 py-4 text-base bg-white pr-12 text-black"
             placeholder="New password"
+            selectionColor={AppColors.cursor_color}
             placeholderTextColor="#999"
             value={newPassword}
             onChangeText={setNewPassword}
@@ -81,7 +83,7 @@ const UpdatePasswordScreen: React.FC = () => {
           />
           <TouchableOpacity
             onPress={() => setShowNewPassword(!showNewPassword)}
-            style={styles.eyeButton}
+            className="absolute right-3 top-3 p-1 w-8 h-8 justify-center items-center"
           >
             <Icon
               name={showNewPassword ? "visibility" : "visibility-off"}
@@ -92,10 +94,11 @@ const UpdatePasswordScreen: React.FC = () => {
         </View>
 
         {/* Confirm New Password Input */}
-        <View style={styles.inputContainer}>
+        <View className="mb-4 relative">
           <TextInput
-            style={styles.textInput}
+            className="border border-gray-300 rounded-xl px-4 py-4 text-base bg-white pr-12 text-black"
             placeholder="Confirm New Password"
+            selectionColor={AppColors.cursor_color}
             placeholderTextColor="#999"
             value={confirmPassword}
             onChangeText={setConfirmPassword}
@@ -103,7 +106,7 @@ const UpdatePasswordScreen: React.FC = () => {
           />
           <TouchableOpacity
             onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-            style={styles.eyeButton}
+            className="absolute right-3 top-3 p-1 w-8 h-8 justify-center items-center"
           >
             <Icon
               name={showConfirmPassword ? "visibility" : "visibility-off"}
@@ -114,83 +117,15 @@ const UpdatePasswordScreen: React.FC = () => {
         </View>
 
         {/* Update Password Button */}
-        <TouchableOpacity style={styles.updateButton} onPress={handleUpdatePassword}>
-          <Text style={styles.updateButtonText}>Update Password</Text>
+        <TouchableOpacity 
+          className="bg-button_background rounded-xl py-2.5 items-center mt-6" 
+          onPress={handleUpdatePassword}
+        >
+          <Text className="text-white text-base font-semibold">Update Password</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f8f8f8',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    backgroundColor: '#f8f8f8',
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#000',
-  },
-  headerRight: {
-    width: 40,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingTop: 24,
-  },
-  inputContainer: {
-    marginBottom: 16,
-    position: 'relative',
-  },
-  textInput: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    fontSize: 16,
-    backgroundColor: '#fff',
-    paddingRight: 50,
-    color: '#000',
-  },
-  eyeButton: {
-    position: 'absolute',
-    right: 12,
-    top: 12,
-    padding: 4,
-    width: 32,
-    height: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  updateButton: {
-    backgroundColor: '#1a237e',
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginTop: 24,
-  },
-  updateButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});
 
 export default UpdatePasswordScreen;

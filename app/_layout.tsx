@@ -7,6 +7,7 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <Stack>
         <Stack.Screen name="index" options={{ headerShown: false }} />
+         <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="home" options={{ headerShown: false }} />
         <Stack.Screen name="currency-rates" options={{ headerShown: false }} />
         <Stack.Screen name="announcements" options={{ headerShown: false }} />
@@ -16,7 +17,9 @@ export default function RootLayout() {
         <Stack.Screen name="deal-details" options={{ headerShown: false }} />
         <Stack.Screen name="profile" options={{ headerShown: false }} />
         <Stack.Screen name="BookDealScreen" options={{ headerShown: false }} />
-
+        <Stack.Screen name="SelectBranch" options={{ headerShown: false }} />
+        <Stack.Screen name="postdeal" options={{ headerShown: false }} />
+      
 
 
 

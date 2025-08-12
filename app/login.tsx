@@ -17,6 +17,7 @@ import CustomAlertDialog from "../components/CustomAlertDialog";
 import { AppColors } from "../constants/theme";
 import AuthService from "../src/api/AuthService";
 import { ApiListener } from "../src/api/ServiceProvider";
+import { API_CREDENTIALS } from '../src/api/constants';
 import LoginResponse from "../src/api/models/LoginResponse";
 import { UserDataManager } from "../utils/userDataManager";
 
@@ -32,6 +33,45 @@ export default function LoginScreen() {
     title: "",
     message: "",
   });
+
+   const getLogoSource = () => {
+      switch (API_CREDENTIALS.currencyExchangeName) {
+        case API_CREDENTIALS.EXCHANGE_NAMES.BANK_OF_PUNJAB:
+          return require('../assets/images/logo_bopex.png');
+        case API_CREDENTIALS.EXCHANGE_NAMES.ALLIED:
+          return require('../assets/images/logo_allied_2.png');
+        case API_CREDENTIALS.EXCHANGE_NAMES.ASKARI:
+          return require('../assets/images/logo_askari.png');
+        case API_CREDENTIALS.EXCHANGE_NAMES.AL_HABIB:
+          return require('../assets/images/logo_al_habib.png');
+        case API_CREDENTIALS.EXCHANGE_NAMES.FAYSAL:
+          return require('../assets/images/logo_faysal.png');
+        case API_CREDENTIALS.EXCHANGE_NAMES.HABIB_QATAR:
+          return require('../assets/images/logo_habib_qatar.png');
+        case API_CREDENTIALS.EXCHANGE_NAMES.LINK:
+          return require('../assets/images/logo_link.png');
+        case API_CREDENTIALS.EXCHANGE_NAMES.MCB:
+          return require('../assets/images/logo_mcb.png');
+        case API_CREDENTIALS.EXCHANGE_NAMES.MEEZAN:
+          return require('../assets/images/logo_meezan.png');
+        case API_CREDENTIALS.EXCHANGE_NAMES.SADIQ:
+          return require('../assets/images/logo_sadiq.png');
+        case API_CREDENTIALS.EXCHANGE_NAMES.UNION:
+          return require('../assets/images/logo_union.png');
+        case API_CREDENTIALS.EXCHANGE_NAMES.ZEEQUE:
+          return require('../assets/images/logo_zeeque.png');
+        case API_CREDENTIALS.EXCHANGE_NAMES.RECL:
+          return require('../assets/images/logo_recl.png');
+        case API_CREDENTIALS.EXCHANGE_NAMES.TECL:
+          return require('../assets/images/logo_tecl.png');
+        case API_CREDENTIALS.EXCHANGE_NAMES.DEMO:
+          return require('../assets/images/logo_demo.png');
+        default:
+          return require('../assets/images/logo.png');
+      }
+    };
+
+  
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
@@ -192,15 +232,15 @@ export default function LoginScreen() {
         keyboardShouldPersistTaps="handled"
         bounces={false}
       >
-        {/* Logo Section */}
-        <View className="items-center mb-10">
-          <Image
-            source={require("../assets/images/logo_transparent.png")}
-            className="mb-2.5"
-            style={{ width: 200, height: 100 }}
-            resizeMode="contain"
-          />
-        </View>
+  {/* Logo Section */}
+<View className="items-center mb-10">
+  <Image
+    source={getLogoSource()}
+    className="mb-2.5"
+    style={{ width: 200, height: 100 }}
+    resizeMode="contain"
+  />
+</View>
 
         {/* Welcome Text Section */}
         <View className="mb-10">

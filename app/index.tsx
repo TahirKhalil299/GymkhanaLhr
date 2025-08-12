@@ -1,200 +1,205 @@
 import { router } from 'expo-router';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
-    Animated,
-    Dimensions,
-    StyleSheet,
-    View
+  Animated,
+  Dimensions,
+  ImageBackground,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { API_CREDENTIALS } from '../src/api/constants';
 import { UserDataManager } from '../utils/userDataManager';
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 export default function AuthSplashScreen() {
-  const translateYAnim = useRef(new Animated.Value(-600)).current;
-  const opacityAnim = useRef(new Animated.Value(0)).current;
-  const scaleXAnim = useRef(new Animated.Value(0.8)).current;
-  const scaleYAnim = useRef(new Animated.Value(0.8)).current;
+  // Logo animations
+  const logoTranslateYAnim = useRef(new Animated.Value(-600)).current;
+  const logoOpacityAnim = useRef(new Animated.Value(0)).current;
+  const logoScaleAnim = useRef(new Animated.Value(0.8)).current;
   
-  // Text animations
-  const textTranslateYAnim = useRef(new Animated.Value(-400)).current;
-  const textOpacityAnim = useRef(new Animated.Value(0)).current;
-  const textScaleAnim = useRef(new Animated.Value(0.8)).current;
+  // Button animations
+  const createAccountTranslateXAnim = useRef(new Animated.Value(-1000)).current;
+  const createAccountOpacityAnim = useRef(new Animated.Value(0)).current;
+  const signInTranslateXAnim = useRef(new Animated.Value(1000)).current;
+  const signInOpacityAnim = useRef(new Animated.Value(0)).current;
 
+  const [logoSource, setLogoSource] = useState(null);
   const insets = useSafeAreaInsets();
 
   useEffect(() => {
-    // Logo and text animations together with slower speed
-    const allAnimations = Animated.parallel([
-      // Logo animations
-      Animated.spring(translateYAnim, {
+    // Set the appropriate logo based on currencyExchangeName
+    const getLogoSource = () => {
+      switch (API_CREDENTIALS.currencyExchangeName) {
+        case API_CREDENTIALS.EXCHANGE_NAMES.BANK_OF_PUNJAB:
+          return require('../assets/images/logo_bopex.png');
+        case API_CREDENTIALS.EXCHANGE_NAMES.ALLIED:
+          return require('../assets/images/logo_allied_2.png');
+        case API_CREDENTIALS.EXCHANGE_NAMES.ASKARI:
+          return require('../assets/images/logo_askari.png');
+        case API_CREDENTIALS.EXCHANGE_NAMES.AL_HABIB:
+          return require('../assets/images/logo_al_habib.png');
+        case API_CREDENTIALS.EXCHANGE_NAMES.FAYSAL:
+          return require('../assets/images/logo_faysal.png');
+        case API_CREDENTIALS.EXCHANGE_NAMES.HABIB_QATAR:
+          return require('../assets/images/logo_habib_qatar.png');
+        case API_CREDENTIALS.EXCHANGE_NAMES.LINK:
+          return require('../assets/images/logo_link.png');
+        case API_CREDENTIALS.EXCHANGE_NAMES.MCB:
+          return require('../assets/images/logo_mcb.png');
+        case API_CREDENTIALS.EXCHANGE_NAMES.MEEZAN:
+          return require('../assets/images/logo_meezan.png');
+        case API_CREDENTIALS.EXCHANGE_NAMES.SADIQ:
+          return require('../assets/images/logo_sadiq.png');
+        case API_CREDENTIALS.EXCHANGE_NAMES.UNION:
+          return require('../assets/images/logo_union.png');
+        case API_CREDENTIALS.EXCHANGE_NAMES.ZEEQUE:
+          return require('../assets/images/logo_zeeque.png');
+        case API_CREDENTIALS.EXCHANGE_NAMES.RECL:
+          return require('../assets/images/logo_recl.png');
+        case API_CREDENTIALS.EXCHANGE_NAMES.TECL:
+          return require('../assets/images/logo_tecl.png');
+        case API_CREDENTIALS.EXCHANGE_NAMES.DEMO:
+          return require('../assets/images/logo_demo.png');
+        default:
+          return require('../assets/images/logo.png');
+      }
+    };
+
+    setLogoSource(getLogoSource());
+
+    // Logo animation
+    const logoAnimations = Animated.parallel([
+      Animated.spring(logoTranslateYAnim, {
         toValue: 0,
         useNativeDriver: true,
-        tension: 20, // Lower tension for slower animation
-        friction: 6, // Higher friction for more controlled bounce
-      }),
-      Animated.timing(opacityAnim, {
-        toValue: 1,
-        duration: 1800, // Slower fade in
-        useNativeDriver: true,
-      }),
-      Animated.timing(scaleXAnim, {
-        toValue: 1,
-        duration: 1800,
-        useNativeDriver: true,
-      }),
-      Animated.timing(scaleYAnim, {
-        toValue: 1,
-        duration: 1800,
-        useNativeDriver: true,
-      }),
-      // Text animations
-      Animated.spring(textTranslateYAnim, {
-        toValue: 0,
-        useNativeDriver: true,
-        tension: 20, // Same as logo for synchronized movement
+        tension: 20,
         friction: 6,
       }),
-      Animated.timing(textOpacityAnim, {
+      Animated.timing(logoOpacityAnim, {
         toValue: 1,
-        duration: 1800,
+        duration: 1200,
         useNativeDriver: true,
       }),
-      Animated.timing(textScaleAnim, {
+      Animated.timing(logoScaleAnim, {
         toValue: 1,
-        duration: 1800,
+        duration: 1200,
         useNativeDriver: true,
-      }),
+      })
     ]);
 
-    // Start all animations together
-    allAnimations.start();
+    // Button animations
+    const createAccountAnimations = Animated.parallel([
+      Animated.spring(createAccountTranslateXAnim, {
+        toValue: 0,
+        useNativeDriver: true,
+        tension: 20,
+        friction: 6,
+      }),
+      Animated.timing(createAccountOpacityAnim, {
+        toValue: 1,
+        duration: 900,
+        useNativeDriver: true,
+      })
+    ]);
+
+    const signInAnimations = Animated.parallel([
+      Animated.spring(signInTranslateXAnim, {
+        toValue: 0,
+        useNativeDriver: true,
+        tension: 20,
+        friction: 6,
+      }),
+      Animated.timing(signInOpacityAnim, {
+        toValue: 1,
+        duration: 900,
+        useNativeDriver: true,
+      })
+    ]);
+
+    // Sequence animations
+    Animated.sequence([
+      logoAnimations,
+      Animated.parallel([createAccountAnimations, signInAnimations])
+    ]).start();
 
     // Check if user is already logged in
     const checkAuthAndNavigate = async () => {
       try {
-        console.log('Checking authentication status...');
         const isLoggedIn = await UserDataManager.isLoggedIn();
-        console.log('Is user logged in:', isLoggedIn);
         
         if (isLoggedIn) {
-          // User is logged in, go to home
-          console.log('User is logged in, navigating to home');
           router.replace('/home');
-        } else {
-          // User is not logged in, go to login
-          console.log('User is not logged in, navigating to login');
-          router.replace('/login');
         }
       } catch (error) {
         console.error('Error checking auth status:', error);
-        router.replace('/login');
       }
     };
 
-    // Navigate after animations complete
-    const timer = setTimeout(() => {
-      checkAuthAndNavigate();
-    }, 4000); // Reduced since animations run together
-
-    return () => clearTimeout(timer);
-  }, [translateYAnim, opacityAnim, scaleXAnim, scaleYAnim, textTranslateYAnim, textOpacityAnim, textScaleAnim]);
+    checkAuthAndNavigate();
+  }, []);
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
-      <View style={styles.content}>
-        <Animated.Image
-          source={require('../assets/images/logo.png')}
-          style={[
-            styles.logo,
-            {
+    <ImageBackground 
+      source={require('../assets/images/back_background.jpg')}
+      className="flex-1 w-full"
+      style={{ paddingTop: insets.top }}
+      resizeMode="cover"
+    >
+      <View className="flex-1 justify-center items-center px-5">
+        {logoSource && (
+          <Animated.Image
+            source={logoSource}
+            className="w-[80%] h-[200px]"
+            style={{
               transform: [
-                { translateY: translateYAnim },
-                { scaleX: scaleXAnim },
-                { scaleY: scaleYAnim },
+                { translateY: logoTranslateYAnim },
+                { scale: logoScaleAnim },
               ],
-              opacity: opacityAnim,
-            },
-          ]}
-          resizeMode="contain"
-        />
-
-        <Animated.Text style={[
-          styles.title,
-          {
-            transform: [
-              { translateY: textTranslateYAnim },
-              { scale: textScaleAnim },
-            ],
-            opacity: textOpacityAnim,
-          },
-        ]}>
-          GymKhanaLhr
-        </Animated.Text>
-  {/* 
-          <View style={styles.loadingContainer}>
-            <View style={styles.loadingDot} />
-            <View style={styles.loadingDot} />
-            <View style={styles.loadingDot} />
-          </View> */}
+              opacity: logoOpacityAnim,
+            }}
+            resizeMode="contain"
+          />
+        )}
       </View>
 
-      <View style={styles.footer}></View>
-    </View>
+      <View className="w-full px-5" style={{ paddingBottom: insets.bottom + 20 }}>
+        <Animated.View 
+          className="w-full mb-2.5"
+          style={{
+            transform: [{ translateX: createAccountTranslateXAnim }],
+            opacity: createAccountOpacityAnim
+          }}
+        >
+          <TouchableOpacity 
+            className="w-full h-12 bg-button_background rounded-lg justify-center items-center shadow"
+            onPress={() => router.push('/login')}
+          >
+            <Text className="text-white text-base font-medium">
+              Create an Account
+            </Text>
+          </TouchableOpacity>
+        </Animated.View>
+
+        <Animated.View 
+          className="w-full mb-2.5"
+          style={{
+            transform: [{ translateX: signInTranslateXAnim }],
+            opacity: signInOpacityAnim
+          }}
+        >
+<TouchableOpacity 
+  className="w-full h-12 bg-white rounded-lg justify-center items-center border-2 border-button_background shadow"
+  onPress={() => router.push('/login')}
+>
+  <Text className="text-button_background text-base font-medium">
+    Sign In
+  </Text>
+</TouchableOpacity>
+        </Animated.View>
+      </View>
+    </ImageBackground>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#1a1a2e',
-  },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 40,
-  },
-  logo: {
-    width: width * 0.6,
-    height: height * 0.3,
-    marginBottom: 5,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#ffffff',
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#b8b8b8',
-    textAlign: 'center',
-    marginBottom: 50,
-  },
-  loadingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  loadingDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#4CAF50',
-    marginHorizontal: 4,
-    opacity: 0.7,
-  },
-  footer: {
-    paddingBottom: 5,
-  },
-  footerText: {
-    fontSize: 14,
-    color: '#888888',
-    textAlign: 'center',
-  },
-});

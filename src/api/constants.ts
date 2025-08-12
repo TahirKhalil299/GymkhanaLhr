@@ -13,25 +13,44 @@ export const API_CREDENTIALS = {
   userId: "BOPEXA1",
   userPassword: "BOPExA1@712025",
   authToken: "BOpExA1547",
-  customerCode: "10002"
+  customerCode: "10002",
+  currencyExchangeName: "demo",
+
+  EXCHANGE_NAMES: {
+    BANK_OF_PUNJAB: "bank_of_punjab",
+    SADIQ: "sadiq",
+    ZEEQUE: "zeeque",
+    RECL: "recl",
+    ALLIED: "allied",
+    ASKARI: "askari",
+    LINK: "link",
+    MCB: "mcb",
+    FAYSAL: "faysal",
+    HABIB_QATAR: "habib_qatar",
+    MEEZAN: "meezan",
+    UNION: "union",
+    AL_HABIB: "al_habib",
+    TECL: "tecl",
+    DEMO: "demo",
+  },
 };
 
 // API Endpoints
 export const ENDPOINTS = {
   AUTH: {
-    REFRESH_TOKEN: 'api/auth/refresh',
-    LOGIN: 'PostVerifyLogin',
-    LOGOUT: 'api/auth/logout',
+    REFRESH_TOKEN: "api/auth/refresh",
+    LOGIN: "PostVerifyLogin",
+    LOGOUT: "api/auth/logout",
   },
   CURRENCY: {
-    GET_RATES: 'getCurrencyRates',
+    GET_RATES: "getCurrencyRates",
   },
-   NETWORK_BRANCHES: {
-    GET_BRANCHES: 'getDealBranches',
+  NETWORK_BRANCHES: {
+    GET_BRANCHES: "getDealBranches",
   },
   USER: {
-    PROFILE: 'api/user/profile',
-    UPDATE_PROFILE: 'api/user/update',
+    PROFILE: "api/user/profile",
+    UPDATE_PROFILE: "api/user/update",
   },
 } as const;
 
@@ -58,5 +77,5 @@ export type EndpointKey = keyof typeof ENDPOINTS;
 export type AuthEndpointKey = keyof typeof ENDPOINTS.AUTH;
 export type CurrencyEndpointKey = keyof typeof ENDPOINTS.CURRENCY;
 export type UserEndpointKey = keyof typeof ENDPOINTS.USER;
-export type HttpStatusValue = typeof HTTP_STATUS[keyof typeof HTTP_STATUS];
-export type TimeoutKey = keyof typeof TIMEOUTS; 
+export type HttpStatusValue = (typeof HTTP_STATUS)[keyof typeof HTTP_STATUS];
+export type TimeoutKey = keyof typeof TIMEOUTS;

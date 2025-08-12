@@ -15,6 +15,7 @@ import RNHTMLtoPDF from "react-native-html-to-pdf";
 import RNPrint from "react-native-print";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/MaterialIcons";
+import { API_CREDENTIALS } from '../src/api/constants';
 
 // Interface matching your Android Deals model
 interface Deal {
@@ -94,9 +95,50 @@ const DealPrintScreen: React.FC = () => {
   const navigation = useNavigation();
   const route = useRoute();
 
+  
+   const getLogoSource = () => {
+      switch (API_CREDENTIALS.currencyExchangeName) {
+        case API_CREDENTIALS.EXCHANGE_NAMES.BANK_OF_PUNJAB:
+          return require('../assets/images/logo_bopex.png');
+        case API_CREDENTIALS.EXCHANGE_NAMES.ALLIED:
+          return require('../assets/images/logo_allied_2.png');
+        case API_CREDENTIALS.EXCHANGE_NAMES.ASKARI:
+          return require('../assets/images/logo_askari.png');
+        case API_CREDENTIALS.EXCHANGE_NAMES.AL_HABIB:
+          return require('../assets/images/logo_al_habib.png');
+        case API_CREDENTIALS.EXCHANGE_NAMES.FAYSAL:
+          return require('../assets/images/logo_faysal.png');
+        case API_CREDENTIALS.EXCHANGE_NAMES.HABIB_QATAR:
+          return require('../assets/images/logo_habib_qatar.png');
+        case API_CREDENTIALS.EXCHANGE_NAMES.LINK:
+          return require('../assets/images/logo_link.png');
+        case API_CREDENTIALS.EXCHANGE_NAMES.MCB:
+          return require('../assets/images/logo_mcb.png');
+        case API_CREDENTIALS.EXCHANGE_NAMES.MEEZAN:
+          return require('../assets/images/logo_meezan.png');
+        case API_CREDENTIALS.EXCHANGE_NAMES.SADIQ:
+          return require('../assets/images/logo_sadiq.png');
+        case API_CREDENTIALS.EXCHANGE_NAMES.UNION:
+          return require('../assets/images/logo_union.png');
+        case API_CREDENTIALS.EXCHANGE_NAMES.ZEEQUE:
+          return require('../assets/images/logo_zeeque.png');
+        case API_CREDENTIALS.EXCHANGE_NAMES.RECL:
+          return require('../assets/images/logo_recl.png');
+        case API_CREDENTIALS.EXCHANGE_NAMES.TECL:
+          return require('../assets/images/logo_tecl.png');
+        case API_CREDENTIALS.EXCHANGE_NAMES.DEMO:
+          return require('../assets/images/logo_demo.png');
+        default:
+          return require('../assets/images/logo.png');
+      }
+    };
+
+
   // Parse the JSON string back to object
   const routeParams = route.params as RouteParams;
   let dealData: Deal = {};
+
+
 
   try {
     if (routeParams?.dealData) {
@@ -156,12 +198,7 @@ const DealPrintScreen: React.FC = () => {
     return value.toString().trim();
   };
 
-  // Get company logo based on exchange name
-  const getCompanyLogo = (): any => {
-    // You can add logic here to select logo based on exchange name
-    // For now, returning a default logo
-    return require("../assets/images/book-deal.png"); // Update with your actual logo path
-  };
+  
 
   // Get deal values based on type
   const getDealValues = () => {
@@ -563,8 +600,13 @@ const DealPrintScreen: React.FC = () => {
         contentContainerClassName="p-4"
       >
         {/* Company Header */}
-        <View className="flex-row bg-white p-4 rounded-lg mb-4 shadow-md shadow-black/20">
-          <Image source={getCompanyLogo()} className="w-16 h-16 mr-4" />
+      
+  <View className="flex-row bg-white p-4 rounded-lg mb-4 shadow-md shadow-black/20">
+  <Image 
+    source={getLogoSource()} 
+    className="w-16 h-16 mr-4" 
+    resizeMode="contain" 
+  />
           <View className="flex-1">
             <Text className="text-lg font-bold text-[#661706] mb-1">
               {orNA(dealData?.CompFName)}

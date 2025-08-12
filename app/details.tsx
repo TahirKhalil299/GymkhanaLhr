@@ -16,75 +16,7 @@ import RNPrint from "react-native-print";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { API_CREDENTIALS } from '../src/api/constants';
-
-// Interface matching your Android Deals model
-interface Deal {
-  DealNo?: string;
-  DealDate?: string;
-  CompFName?: string;
-  BranchID?: string;
-  BranchSName?: string;
-  BranchCode?: string;
-  BranchAddress1?: string;
-  BranchAddress2?: string;
-  BranchCity?: string;
-  BranchCountry?: string;
-  BranchTel1?: string;
-  BranchFax1?: string;
-  BranchEmail1?: string;
-  DeliveryBranchID?: string;
-  DeliveryBranchCode?: string;
-  DeliveryBranchSName?: string;
-  EXCompany?: string;
-  StlD?: string;
-  PartyDealRemarks?: string;
-  SNName?: string;
-  SNAddress1?: string;
-  SNCity?: string;
-  SNCountry?: string;
-  SNTelMobile?: string;
-  SNRelationship?: string;
-  SNPurpose?: string;
-  CTypeD?: string;
-  CCType?: string;
-  DetailCode?: string;
-  DetailCodeDescription?: string;
-  TrLevel?: string;
-  TrLevelD?: string;
-  ROTypeID?: string;
-  ROTypeDD?: string;
-  DealTrlevel?: string;
-  DealTrlevelD?: string;
-  DeliveryAt?: string;
-  PayINCurrID?: string;
-  PayINAmt?: string;
-  PayINPKR?: string;
-  PayINRate?: string;
-  PayOutCurrID?: string;
-  PayOutRate?: string;
-  PayOutAmt?: string;
-  PayOutPKR?: string;
-  PartyProfile?: string;
-  PartyCode?: string;
-  PartyTitle?: string;
-  PartyName?: string;
-  PartyCStatusID?: string;
-  PartyCStatusD?: string;
-  PartyITypeID?: string;
-  PartyIType?: string;
-  PartyITypeRef?: string;
-  PartyITypeExpiry?: string;
-  PartyTelMobile?: string;
-  PartyEmail?: string;
-  PartyAddress1?: string;
-  PartyCity?: string;
-  PartyCountry?: string;
-  AccActivity1ID?: string;
-  AccActivity1D?: string;
-  AccActivity1DD?: string;
-  US?: string;
-  PDate?: string;
-}
+import { Deal } from '../src/api/models/DealListResponse';
 
 interface RouteParams {
   dealData?: string; // Make it optional to handle undefined case
@@ -95,50 +27,46 @@ const DealPrintScreen: React.FC = () => {
   const navigation = useNavigation();
   const route = useRoute();
 
-  
-   const getLogoSource = () => {
-      switch (API_CREDENTIALS.currencyExchangeName) {
-        case API_CREDENTIALS.EXCHANGE_NAMES.BANK_OF_PUNJAB:
-          return require('../assets/images/logo_bopex.png');
-        case API_CREDENTIALS.EXCHANGE_NAMES.ALLIED:
-          return require('../assets/images/logo_allied_2.png');
-        case API_CREDENTIALS.EXCHANGE_NAMES.ASKARI:
-          return require('../assets/images/logo_askari.png');
-        case API_CREDENTIALS.EXCHANGE_NAMES.AL_HABIB:
-          return require('../assets/images/logo_al_habib.png');
-        case API_CREDENTIALS.EXCHANGE_NAMES.FAYSAL:
-          return require('../assets/images/logo_faysal.png');
-        case API_CREDENTIALS.EXCHANGE_NAMES.HABIB_QATAR:
-          return require('../assets/images/logo_habib_qatar.png');
-        case API_CREDENTIALS.EXCHANGE_NAMES.LINK:
-          return require('../assets/images/logo_link.png');
-        case API_CREDENTIALS.EXCHANGE_NAMES.MCB:
-          return require('../assets/images/logo_mcb.png');
-        case API_CREDENTIALS.EXCHANGE_NAMES.MEEZAN:
-          return require('../assets/images/logo_meezan.png');
-        case API_CREDENTIALS.EXCHANGE_NAMES.SADIQ:
-          return require('../assets/images/logo_sadiq.png');
-        case API_CREDENTIALS.EXCHANGE_NAMES.UNION:
-          return require('../assets/images/logo_union.png');
-        case API_CREDENTIALS.EXCHANGE_NAMES.ZEEQUE:
-          return require('../assets/images/logo_zeeque.png');
-        case API_CREDENTIALS.EXCHANGE_NAMES.RECL:
-          return require('../assets/images/logo_recl.png');
-        case API_CREDENTIALS.EXCHANGE_NAMES.TECL:
-          return require('../assets/images/logo_tecl.png');
-        case API_CREDENTIALS.EXCHANGE_NAMES.DEMO:
-          return require('../assets/images/logo_demo.png');
-        default:
-          return require('../assets/images/logo.png');
-      }
-    };
-
+  const getLogoSource = () => {
+    switch (API_CREDENTIALS.currencyExchangeName) {
+      case API_CREDENTIALS.EXCHANGE_NAMES.BANK_OF_PUNJAB:
+        return require('../assets/images/logo_bopex.png');
+      case API_CREDENTIALS.EXCHANGE_NAMES.ALLIED:
+        return require('../assets/images/logo_allied_2.png');
+      case API_CREDENTIALS.EXCHANGE_NAMES.ASKARI:
+        return require('../assets/images/logo_askari.png');
+      case API_CREDENTIALS.EXCHANGE_NAMES.AL_HABIB:
+        return require('../assets/images/logo_al_habib.png');
+      case API_CREDENTIALS.EXCHANGE_NAMES.FAYSAL:
+        return require('../assets/images/logo_faysal.png');
+      case API_CREDENTIALS.EXCHANGE_NAMES.HABIB_QATAR:
+        return require('../assets/images/logo_habib_qatar.png');
+      case API_CREDENTIALS.EXCHANGE_NAMES.LINK:
+        return require('../assets/images/logo_link.png');
+      case API_CREDENTIALS.EXCHANGE_NAMES.MCB:
+        return require('../assets/images/logo_mcb.png');
+      case API_CREDENTIALS.EXCHANGE_NAMES.MEEZAN:
+        return require('../assets/images/logo_meezan.png');
+      case API_CREDENTIALS.EXCHANGE_NAMES.SADIQ:
+        return require('../assets/images/logo_sadiq.png');
+      case API_CREDENTIALS.EXCHANGE_NAMES.UNION:
+        return require('../assets/images/logo_union.png');
+      case API_CREDENTIALS.EXCHANGE_NAMES.ZEEQUE:
+        return require('../assets/images/logo_zeeque.png');
+      case API_CREDENTIALS.EXCHANGE_NAMES.RECL:
+        return require('../assets/images/logo_recl.png');
+      case API_CREDENTIALS.EXCHANGE_NAMES.TECL:
+        return require('../assets/images/logo_tecl.png');
+      case API_CREDENTIALS.EXCHANGE_NAMES.DEMO:
+        return require('../assets/images/logo_demo.png');
+      default:
+        return require('../assets/images/logo.png');
+    }
+  };
 
   // Parse the JSON string back to object
   const routeParams = route.params as RouteParams;
-  let dealData: Deal = {};
-
-
+  let dealData: Deal = {} as Deal;
 
   try {
     if (routeParams?.dealData) {
@@ -150,18 +78,17 @@ const DealPrintScreen: React.FC = () => {
     }
   } catch (error) {
     console.error("Error parsing deal data:", error);
-    // Handle error - maybe show an alert or navigate back
     Alert.alert("Error", "Invalid deal data received");
   }
 
   const [isGenerating, setIsGenerating] = useState(false);
 
-  // Helper functions matching your Android Utils
+  // Helper functions
   const formatDateString = (dateString: string | undefined): string => {
     if (!dateString || dateString.trim() === "") return "N/A";
     try {
       const date = new Date(dateString);
-      if (isNaN(date.getTime())) return dateString; // Return original if invalid date
+      if (isNaN(date.getTime())) return dateString;
       return date.toLocaleDateString("en-GB", {
         day: "2-digit",
         month: "short",
@@ -187,40 +114,33 @@ const DealPrintScreen: React.FC = () => {
   };
 
   const orNA = (value: string | undefined): string => {
-    // More thorough check for empty values
-    if (
-      value === undefined ||
-      value === null ||
-      value.toString().trim() === ""
-    ) {
+    if (value === undefined || value === null || value.toString().trim() === "") {
       return "N/A";
     }
     return value.toString().trim();
   };
 
-  
-
   // Get deal values based on type
   const getDealValues = () => {
-    console.log("Getting deal values for ROTypeID:", dealData?.ROTypeID); // Debug log
+    console.log("Getting deal values for ROTypeID:", dealData?.ROTypeID);
 
     if (dealData?.ROTypeID === "7") {
       const values = {
-        currency: orNA(dealData?.PayINCurrID),
-        amount: formatNumber(dealData?.PayINAmt),
-        rate: formatNumber(dealData?.PayINRate),
-        pkrAmount: formatNumber(dealData?.PayINPKR),
+        currency: orNA(dealData?.PayIN_CurrID),
+        amount: formatNumber(dealData?.PayIN_Amt),
+        rate: formatNumber(dealData?.PayIN_Rate),
+        pkrAmount: formatNumber(dealData?.PayIN_PKR),
       };
-      console.log("PayIN values:", values); // Debug log
+      console.log("PayIN values:", values);
       return values;
     } else {
       const values = {
-        currency: orNA(dealData?.PayOutCurrID),
-        amount: formatNumber(dealData?.PayOutAmt),
-        rate: formatNumber(dealData?.PayOutRate),
-        pkrAmount: formatNumber(dealData?.PayOutPKR),
+        currency: orNA(dealData?.PayOut_CurrID),
+        amount: formatNumber(dealData?.PayOut_Amt),
+        rate: formatNumber(dealData?.PayOut_Rate),
+        pkrAmount: formatNumber(dealData?.PayOut_PKR),
       };
-      console.log("PayOut values:", values); // Debug log
+      console.log("PayOut values:", values);
       return values;
     }
   };
@@ -228,241 +148,164 @@ const DealPrintScreen: React.FC = () => {
   const dealValues = getDealValues();
 
   // Generate HTML for PDF
-  const generateHTML = (): string => {
-    const currentDate = new Date().toLocaleString("en-GB", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+const generateHTML = (): string => {
+  const currentDate = new Date().toLocaleString("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 
-    return `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <title>Deal Report - ${orNA(dealData?.DealNo)}</title>
-        <style>
-          body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            font-size: 12px;
-            line-height: 1.4;
-          }
-          .header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #ccc;
-            padding-bottom: 20px;
-          }
-          .logo {
-            width: 80px;
-            height: 80px;
-            margin-right: 20px;
-          }
-          .company-info {
-            flex: 1;
-          }
-          .company-name {
-            font-size: 18px;
-            font-weight: bold;
-            color: #661706;
-            margin-bottom: 5px;
-          }
-          .company-details {
-            color: #666;
-            margin-bottom: 3px;
-          }
-          .form-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 30px;
-          }
-          .form-table td {
-            border: 1px solid #ccc;
-            padding: 8px;
-            vertical-align: top;
-          }
-          .form-table .label {
-            background-color: #f9f9f9;
-            font-weight: normal;
-            width: 25%;
-            font-size: 10px;
-          }
-          .form-table .value {
-            font-weight: bold;
-            width: 75%;
-            font-size: 10px;
-          }
-          .transaction-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 30px;
-          }
-          .transaction-table th,
-          .transaction-table td {
-            border: 1px solid #000;
-            padding: 10px;
-            text-align: center;
-          }
-          .transaction-table th {
-            background-color: #f0f0f0;
-            font-weight: bold;
-          }
-          .signatures {
-            display: flex;
-            justify-content: space-around;
-            margin-top: 40px;
-          }
-          .signature-box {
-            width: 150px;
-            height: 80px;
-            border: 1px solid #000;
-            text-align: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 10px;
-          }
-          .signature-label {
-            text-align: center;
-            font-style: italic;
-            font-size: 10px;
-          }
-          .prepared-by {
-            font-size: 12px;
-          }
-          .footer {
-            margin-top: 40px;
-            text-align: center;
-            font-size: 10px;
-            color: #666;
-          }
-          .section-title {
-            font-size: 14px;
-            font-weight: bold;
-            margin: 20px 0 10px 0;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <div class="company-info">
-            <div class="company-name">${orNA(dealData?.CompFName)}</div>
-            <div class="company-details">${orNA(dealData?.BranchAddress1)} ${orNA(dealData?.BranchCity)} ${orNA(dealData?.BranchCountry)}</div>
-            <div class="company-details">Tel: ${orNA(dealData?.BranchTel1)}</div>
-            <div class="company-details">Email: ${orNA(dealData?.BranchEmail1)}</div>
-            <div class="company-details">Fax: ${orNA(dealData?.BranchFax1)}</div>
-            <div class="company-details"><strong>${orNA(dealData?.BranchSName)}</strong></div>
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>Deal Report - ${orNA(dealData?.Deal_No)}</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          margin: 20px;
+          font-size: 12px;
+          line-height: 1.4;
+        }
+        .header {
+          display: flex;
+          align-items: center;
+          margin-bottom: 30px;
+          border-bottom: 2px solid #ccc;
+          padding-bottom: 20px;
+        }
+        .logo {
+          width: 80px;
+          height: 80px;
+          margin-right: 20px;
+        }
+        .company-info {
+          flex: 1;
+        }
+        .company-name {
+          font-size: 18px;
+          font-weight: bold;
+          color: #661706;
+          margin-bottom: 5px;
+        }
+        .company-details {
+          color: #666;
+          margin-bottom: 3px;
+        }
+        .form-table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-bottom: 30px;
+        }
+        .form-table td {
+          border: 1px solid #ccc;
+          padding: 8px;
+          vertical-align: top;
+        }
+        .form-table .label {
+          background-color: #f9f9f9;
+          font-weight: normal;
+          width: 25%;
+          font-size: 10px;
+        }
+        .form-table .value {
+          font-weight: bold;
+          width: 75%;
+          font-size: 10px;
+        }
+        .transaction-table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-bottom: 30px;
+        }
+        .transaction-table th,
+        .transaction-table td {
+          border: 1px solid #000;
+          padding: 10px;
+          text-align: center;
+        }
+        .transaction-table th {
+          background-color: #f0f0f0;
+          font-weight: bold;
+        }
+        .signatures {
+          display: flex;
+          justify-content: space-between;
+          margin-top: 60px;
+          padding: 0 20px;
+        }
+        .signature-container {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          width: 30%;
+        }
+        .signature-box {
+          width: 100%;
+          height: 80px;
+          border: 1px solid #000;
+          margin-bottom: 10px;
+          display: flex;
+          align-items: flex-end;
+          justify-content: center;
+          padding-bottom: 10px;
+        }
+        .signature-label {
+          text-align: center;
+          font-size: 12px;
+          font-weight: bold;
+        }
+        .prepared-by {
+          font-size: 12px;
+          font-weight: bold;
+        }
+        .footer {
+          margin-top: 40px;
+          text-align: center;
+          font-size: 10px;
+          color: #666;
+        }
+        .section-title {
+          font-size: 14px;
+          font-weight: bold;
+          margin: 20px 0 10px 0;
+        }
+      </style>
+    </head>
+    <body>
+      <!-- Rest of the HTML remains the same until signatures section -->
+
+      <div class="section-title">Signatures</div>
+      <div class="signatures">
+        <div class="signature-container">
+          <div class="signature-box">
+            <span class="prepared-by">${orNA(dealData?.U_S)}</span>
           </div>
+          <div class="signature-label">Prepared By</div>
         </div>
-
-        <table class="form-table">
-          <tr>
-            <td class="label">Deal Date:</td>
-            <td class="value">${formatDateString(dealData?.DealDate)}</td>
-          </tr>
-          <tr>
-            <td class="label">Deal No:</td>
-            <td class="value">${orNA(dealData?.DealNo)}</td>
-          </tr>
-          <tr>
-            <td class="label">Customer Type:</td>
-            <td class="value">${orNA(dealData?.CTypeD)}</td>
-          </tr>
-          <tr>
-            <td class="label">Name:</td>
-            <td class="value">${orNA(dealData?.EXCompany)}</td>
-          </tr>
-          <tr>
-            <td class="label">Email ID:</td>
-            <td class="value">${orNA(dealData?.PartyEmail)}</td>
-          </tr>
-          <tr>
-            <td class="label">Address:</td>
-            <td class="value">${orNA(dealData?.PartyAddress1)}</td>
-          </tr>
-          <tr>
-            <td class="label">City:</td>
-            <td class="value">${orNA(dealData?.PartyCity)}</td>
-          </tr>
-          <tr>
-            <td class="label">Country:</td>
-            <td class="value">${orNA(dealData?.PartyCountry)}</td>
-          </tr>
-          <tr>
-            <td class="label">Special Instructions:</td>
-            <td class="value">${orNA(dealData?.PartyDealRemarks)}</td>
-          </tr>
-          <tr>
-            <td class="label">Transaction Type:</td>
-            <td class="value">${orNA(dealData?.ROTypeDD)}</td>
-          </tr>
-          <tr>
-            <td class="label">Settlement:</td>
-            <td class="value">${orNA(dealData?.StlD)}</td>
-          </tr>
-          <tr>
-            <td class="label">Bank Account:</td>
-            <td class="value">${orNA(dealData?.DetailCodeDescription)}</td>
-          </tr>
-          <tr>
-            <td class="label">Delivery From:</td>
-            <td class="value">${orNA(dealData?.DeliveryBranchSName)} , ${orNA(dealData?.DeliveryBranchCode)}</td>
-          </tr>
-          <tr>
-            <td class="label">Delivery At:</td>
-            <td class="value">${orNA(dealData?.DeliveryAt)}</td>
-          </tr>
-        </table>
-
-        <div class="section-title">Transaction Table</div>
-        <table class="transaction-table">
-          <thead>
-            <tr>
-              <th>Foreign Currency</th>
-              <th>Currency Amount</th>
-              <th>Exchange Rate</th>
-              <th>Value in PKR</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>${dealValues.currency}</td>
-              <td>${dealValues.amount}</td>
-              <td>${dealValues.rate}</td>
-              <td>${dealValues.pkrAmount}</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <div class="section-title">Signatures</div>
-        <div class="signatures">
-          <div>
-            <div class="signature-box">
-              <span class="prepared-by">${orNA(dealData?.US)}</span>
-            </div>
-            <div class="signature-label">Prepared by</div>
-          </div>
-          <div>
-            <div class="signature-box"></div>
-            <div class="signature-label">Authorized/Cancel<br>Signature</div>
-          </div>
-          <div>
-            <div class="signature-box"></div>
-            <div class="signature-label">Customer<br>Signature</div>
-          </div>
+        
+        <div class="signature-container">
+          <div class="signature-box"></div>
+          <div class="signature-label">Authorized Signature</div>
         </div>
-
-        <div class="footer">
-          Generated: ${currentDate}
+        
+        <div class="signature-container">
+          <div class="signature-box"></div>
+          <div class="signature-label">Customer Signature</div>
+          ${dealData?.Party_Name ? `<div class="signature-label">${orNA(dealData.Party_Name)}</div>` : ''}
         </div>
-      </body>
-      </html>
-    `;
-  };
+      </div>
+
+      <div class="footer">
+        Generated: ${currentDate}
+      </div>
+    </body>
+    </html>
+  `;
+};
 
   // Request storage permissions
   const requestStoragePermission = async (): Promise<boolean> => {
@@ -516,23 +359,22 @@ const DealPrintScreen: React.FC = () => {
 
       const options = {
         html: generateHTML(),
-        fileName: `Deal_Report_${dealData?.DealNo || "Unknown"}_${Date.now()}`,
+        fileName: `Deal_Report_${dealData?.Deal_No || "Unknown"}_${Date.now()}`,
         directory: "Downloads",
         base64: false,
       };
 
       const pdf = await RNHTMLtoPDF.convert(options);
 
-      //   if (pdf.filePath) {
-      //     showSuccessDialog(pdf.filePath, () => {
-      //       // Open PDF file
-      //       RNPrint.print({ filePath: pdf.filePath })
-      //         .catch((error) => {
-      //           console.log('Error opening PDF:', error);
-      //           Alert.alert('Error', 'Unable to open PDF file');
-      //         });
-      //     });
-      //   }
+      if (pdf.filePath) {
+        showSuccessDialog(pdf.filePath, () => {
+          // RNPrint.print({ filePath: pdf.filePath })
+          //   .catch((error) => {
+          //     console.log('Error opening PDF:', error);
+          //     Alert.alert('Error', 'Unable to open PDF file');
+          //   });
+        });
+      }
     } catch (error) {
       console.error("PDF Generation Error:", error);
       Alert.alert("Error", `Failed to create PDF: ${error}`);
@@ -548,7 +390,7 @@ const DealPrintScreen: React.FC = () => {
 
       const options = {
         html: generateHTML(),
-        fileName: `Deal_Report_${dealData?.DealNo || "Unknown"}`,
+        fileName: `Deal_Report_${dealData?.Deal_No || "Unknown"}`,
         directory: "Cache",
       };
 
@@ -573,14 +415,14 @@ const DealPrintScreen: React.FC = () => {
   React.useEffect(() => {
     console.log("Current dealData:", dealData);
     console.log("Sample values:");
-    console.log("DealNo:", dealData?.DealNo);
-    console.log("CompFName:", dealData?.CompFName);
-    console.log("PayINCurrID:", dealData?.PayINCurrID);
-    console.log("PayOutCurrID:", dealData?.PayOutCurrID);
+    console.log("Deal_No:", dealData?.Deal_No);
+    console.log("Comp_FName:", dealData?.Comp_FName);
+    console.log("PayIN_CurrID:", dealData?.PayIN_CurrID);
+    console.log("PayOut_CurrID:", dealData?.PayOut_CurrID);
   }, [dealData]);
 
   return (
-    <View className="flex-1 bg-gray-100" style={{ paddingTop: insets.top,paddingBottom: insets.bottom }}>
+    <View className="flex-1 bg-gray-100" style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}>
       <StatusBar barStyle="dark-content" backgroundColor="#f5f5f5" />
 
       {/* Header */}
@@ -600,28 +442,27 @@ const DealPrintScreen: React.FC = () => {
         contentContainerClassName="p-4"
       >
         {/* Company Header */}
-      
-  <View className="flex-row bg-white p-4 rounded-lg mb-4 shadow-md shadow-black/20">
-  <Image 
-    source={getLogoSource()} 
-    className="w-16 h-16 mr-4" 
-    resizeMode="contain" 
-  />
+        <View className="flex-row bg-white p-4 rounded-lg mb-4 shadow-md shadow-black/20">
+          <Image 
+            source={getLogoSource()} 
+            className="w-16 h-16 mr-4" 
+            resizeMode="contain" 
+          />
           <View className="flex-1">
             <Text className="text-lg font-bold text-[#661706] mb-1">
-              {orNA(dealData?.CompFName)}
+              {orNA(dealData?.Comp_FName)}
             </Text>
             <Text className="text-xs text-gray-600 mb-0.5">
-              {`${orNA(dealData?.BranchAddress1)} ${orNA(dealData?.BranchCity)} ${orNA(dealData?.BranchCountry)}`.trim()}
+              {`${orNA(dealData?.Branch_Address1)} ${orNA(dealData?.Branch_City)} ${orNA(dealData?.Branch_Country)}`.trim()}
             </Text>
             <Text className="text-xs text-gray-600 mb-0.5">
-              Tel: {orNA(dealData?.BranchTel1)}
+              Tel: {orNA(dealData?.Branch_Tel1)}
             </Text>
             <Text className="text-xs text-gray-600 mb-0.5">
-              Fax: {orNA(dealData?.BranchFax1)}
+              Fax: {orNA(dealData?.Branch_Fax1)}
             </Text>
             <Text className="text-sm font-semibold text-gray-800 mt-1">
-              {orNA(dealData?.BranchSName)}
+              {orNA(dealData?.Branch_SName)}
             </Text>
           </View>
         </View>
@@ -631,18 +472,18 @@ const DealPrintScreen: React.FC = () => {
           {[
             {
               label: "Deal Date:",
-              value: formatDateString(dealData?.DealDate),
+              value: formatDateString(dealData?.Deal_Date),
             },
-            { label: "Deal No:", value: orNA(dealData?.DealNo) },
+            { label: "Deal No:", value: orNA(dealData?.Deal_No) },
             { label: "Customer Type:", value: orNA(dealData?.CTypeD) },
-            { label: "Name:", value: orNA(dealData?.EXCompany) },
-            { label: "Email ID:", value: orNA(dealData?.PartyEmail) },
-            { label: "Address:", value: orNA(dealData?.PartyAddress1) },
-            { label: "City:", value: orNA(dealData?.PartyCity) },
-            { label: "Country:", value: orNA(dealData?.PartyCountry) },
+            { label: "Name:", value: orNA(dealData?.EX_Company) },
+            { label: "Email ID:", value: orNA(dealData?.Party_Email) },
+            { label: "Address:", value: orNA(dealData?.Party_Address1) },
+            { label: "City:", value: orNA(dealData?.Party_City) },
+            { label: "Country:", value: orNA(dealData?.Party_Country) },
             {
               label: "Special Instructions:",
-              value: orNA(dealData?.PartyDealRemarks),
+              value: orNA(dealData?.Party_Deal_Remarks),
             },
             { label: "Transaction Type:", value: orNA(dealData?.ROTypeDD) },
             { label: "Settlement:", value: orNA(dealData?.StlD) },
@@ -652,9 +493,9 @@ const DealPrintScreen: React.FC = () => {
             },
             {
               label: "Delivery From:",
-              value: `${orNA(dealData?.DeliveryBranchSName)} , ${orNA(dealData?.DeliveryBranchCode)}`,
+              value: `${orNA(dealData?.Delivery_Branch_SName)} , ${orNA(dealData?.Delivery_Branch_Code)}`,
             },
-            { label: "Delivery At:", value: orNA(dealData?.DeliveryAt) },
+            { label: "Delivery At:", value: orNA(dealData?.Delivery_At) },
           ].map((item, index) => (
             <View
               key={index}
@@ -708,7 +549,6 @@ const DealPrintScreen: React.FC = () => {
         </View>
       </ScrollView>
 
-      {/* Action Buttons */}
       {/* Action Buttons */}
       <View className="flex-row px-4 py-4 bg-gray-100 gap-3">
         <TouchableOpacity

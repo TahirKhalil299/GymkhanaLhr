@@ -51,7 +51,7 @@ export const ENDPOINTS = {
   USER: {
     PROFILE: "api/user/profile",
     UPDATE_PROFILE: "api/user/update",
-  },
+  },DEAL_LIST: "GetCustomerDeals",
 } as const;
 
 // Request Timeouts

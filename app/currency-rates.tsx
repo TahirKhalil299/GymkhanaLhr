@@ -65,62 +65,107 @@ const CurrencyRates: React.FC<CurrencyRatesProps> = ({ onBack }) => {
     fetchCurrencyRates();
   }, []);
 
-  const fetchCurrencyRates = () => {
-    setIsLoading(true);
-    
-    const listener: ApiListener = {
-      onRequestStarted: () => {
-        console.log('Currency rates request started');
-      },
-      onRequestSuccess: async (response, data, tag) => {
-        console.log('Currency rates successful:', data);
-        try {
-          const responseData = JSON.parse(data);
-          console.log('Parsed currency rates data:', responseData);
-          
-          if (responseData.data && responseData.data.Rates && Array.isArray(responseData.data.Rates)) {
-            setCurrencies(responseData.data.Rates);
-            console.log('Currency rates set:', responseData.data.Rates);
-          } else if (responseData.Rates && Array.isArray(responseData.Rates)) {
-            setCurrencies(responseData.Rates);
-            console.log('Currency rates set (fallback):', responseData.Rates);
-          } else {
-            console.log('No rates data found in response');
-            setCurrencies([]);
-          }
-        } catch (error) {
-          console.error('Error processing currency rates response:', error);
-          setCurrencies([]);
-        }
-      },
-      onRequestFailure: (error, message, errors, tag) => {
-        console.log('Currency rates failed:', message);
-        setCurrencies([]);
-      },
-      onRequestEnded: () => {
-        console.log('Currency rates request ended');
-        setIsLoading(false);
-      },
-      onError: (response, message, tag) => {
-        console.log('Currency rates error:', message);
-        setCurrencies([]);
-        setIsLoading(false);
-      }
-    };
+const fetchCurrencyRates = () => {
+  setIsLoading(true);
+  console.log('[1] Starting to fetch currency rates...'); // Initial log
+  
+  const listener: ApiListener = {
+    onRequestStarted: () => {
+      console.log('[2] Currency rates request started - API call initiated');
+    },
+    onRequestSuccess: async (response, data, tag) => {
+      console.log('[3] Raw API response received:', data);
+      
+      try {
+        const responseData = JSON.parse(data);
+        console.log('[4] Parsed JSON response:', responseData);
+        
+        // Detailed logging of the response structure
+        console.log('[5] Response structure check:', {
+          hasData: !!responseData.data,
+          hasRates: !!responseData.data?.Rates,
+          isArray: Array.isArray(responseData.data?.Rates),
+          ratesCount: responseData.data?.Rates?.length || 0,
+          hasDirectRates: !!responseData.Rates,
+          isDirectArray: Array.isArray(responseData.Rates),
+          directRatesCount: responseData.Rates?.length || 0
+        });
 
-    try {
-      const { serviceProvider } = require('../src/api/ServiceProvider');
-      serviceProvider.sendApiCall(
-        ApiService.getCurrencyRates(),
-        RequestType.GET_RATE_LIST,
-        listener
-      );
-    } catch (error) {
-      console.error('Currency rates error:', error);
+        let ratesToSet = [];
+        
+        if (responseData.data && responseData.data.Rates && Array.isArray(responseData.data.Rates)) {
+          console.log('[6] Using data.Rates path, count:', responseData.data.Rates.length);
+          ratesToSet = responseData.data.Rates;
+        } else if (responseData.Rates && Array.isArray(responseData.Rates)) {
+          console.log('[6] Using direct Rates path, count:', responseData.Rates.length);
+          ratesToSet = responseData.Rates;
+        } else {
+          console.warn('[6] No valid rates data found in response');
+        }
+
+        console.log('[7] Rates to be set:', ratesToSet);
+        setCurrencies(ratesToSet);
+        
+        // Additional verification after state update
+        setTimeout(() => {
+          console.log('[8] State after update (verify):', {
+            currenciesCount: currencies.length,
+            currencies: currencies
+          });
+        }, 0);
+        
+      } catch (error) {
+        console.error('[ERROR] Parsing failed:', error);
+        console.log('[ERROR] Original data that failed to parse:', data);
+        setCurrencies([]);
+      }
+    },
+    onRequestFailure: (error, message, errors, tag) => {
+      console.error('[ERROR] Request failed:', {
+        error,
+        message,
+        errors,
+        tag
+      });
+      setCurrencies([]);
+    },
+    onRequestEnded: () => {
+      console.log('[9] Request completed');
+      setIsLoading(false);
+    },
+    onError: (response, message, tag) => {
+      console.error('[ERROR] API error:', {
+        response,
+        message,
+        tag
+      });
       setCurrencies([]);
       setIsLoading(false);
     }
   };
+
+  try {
+    console.log('[10] Attempting to make API call...');
+    const { serviceProvider } = require('../src/api/ServiceProvider');
+    serviceProvider.sendApiCall(
+      ApiService.getCurrencyRates(),
+      RequestType.GET_RATE_LIST,
+      listener
+    );
+  } catch (error) {
+    console.error('[ERROR] API call failed:', error);
+    setCurrencies([]);
+    setIsLoading(false);
+  }
+};
+
+// Add this useEffect to monitor state changes
+useEffect(() => {
+  console.log('[STATE UPDATE] currencies changed:', {
+    count: currencies.length,
+    items: currencies
+  });
+}, [currencies]);
 
   const renderCurrencyRow = (item: Rates, index: number) => (
     <View key={index} style={styles.currencyRow}>

@@ -1,20 +1,19 @@
-// app/components/RatesBottomSheet.tsx
 import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import {
-    FlatList,
-    Image,
-    Modal,
-    SafeAreaView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  Image,
+  Modal,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { Rate } from '../type';
 
-// Define the ref methods interface for better type safety
 interface RatesBottomSheetRef {
   open: () => void;
   close: () => void;
@@ -24,15 +23,15 @@ interface RatesBottomSheetProps {
   rates: Rate[];
   isForBuying: boolean;
   onRateSelect: (rate: Rate) => void;
+  isLoading: boolean;
 }
 
 const RatesBottomSheet = forwardRef<RatesBottomSheetRef, RatesBottomSheetProps>(
-  ({ rates, isForBuying, onRateSelect }, ref) => {
+  ({ rates, isForBuying, onRateSelect, isLoading }, ref) => {
     const [visible, setVisible] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [filteredRates, setFilteredRates] = useState<Rate[]>(rates);
 
-    // Update filtered rates when rates prop changes
     useEffect(() => {
       if (rates && rates.length > 0) {
         setFilteredRates(rates);
@@ -73,22 +72,15 @@ const RatesBottomSheet = forwardRef<RatesBottomSheetRef, RatesBottomSheetProps>(
     };
 
     const handleRatePress = (rate: Rate) => {
-      if (onRateSelect && typeof onRateSelect === 'function') {
-        onRateSelect(rate);
-      }
+      onRateSelect(rate);
       setVisible(false);
     };
 
-    const formatNumber = (num: number | undefined) => {
-      if (num === undefined || num === null || isNaN(num)) {
-        return '0.00';
-      }
-      return num.toFixed(2);
+    const formatNumber = (num: number) => {
+      return num?.toFixed(2) || '0.00';
     };
 
     const renderRateItem = ({ item }: { item: Rate }) => {
-      if (!item) return null;
-
       return (
         <TouchableOpacity
           style={styles.rateItem}
@@ -96,9 +88,7 @@ const RatesBottomSheet = forwardRef<RatesBottomSheetRef, RatesBottomSheetProps>(
           activeOpacity={0.7}>
           <View style={styles.rateItemContent}>
             <Image 
-              source={{ 
-                uri: item.imagePath || 'https://via.placeholder.com/32x32/cccccc/000000?text=?' 
-              }} 
+              source={{ uri: item.imagePath }} 
               style={styles.flagImage}
               defaultSource={{ uri: 'https://via.placeholder.com/32x32/cccccc/000000?text=?' }}
             />
@@ -137,8 +127,7 @@ const RatesBottomSheet = forwardRef<RatesBottomSheetRef, RatesBottomSheetProps>(
         visible={visible}
         animationType="slide"
         presentationStyle="pageSheet"
-        onRequestClose={() => setVisible(false)}
-        statusBarTranslucent={false}>
+        onRequestClose={() => setVisible(false)}>
         <SafeAreaView style={styles.container}>
           <View style={styles.header}>
             <Text style={styles.title}>Currency Rates</Text>
@@ -163,7 +152,12 @@ const RatesBottomSheet = forwardRef<RatesBottomSheetRef, RatesBottomSheetProps>(
             />
           </View>
 
-          {!filteredRates || filteredRates.length === 0 ? (
+          {isLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#333" />
+              <Text style={styles.loadingText}>Loading currencies...</Text>
+            </View>
+          ) : filteredRates.length === 0 ? (
             <View style={styles.noResults}>
               <Text style={styles.noResultsText}>
                 {searchQuery ? 'No results found' : 'No currencies available'}
@@ -173,12 +167,9 @@ const RatesBottomSheet = forwardRef<RatesBottomSheetRef, RatesBottomSheetProps>(
             <FlatList
               data={filteredRates}
               renderItem={renderRateItem}
-              keyExtractor={(item, index) => item.id || index.toString()}
+              keyExtractor={(item) => item.id}
               style={styles.ratesList}
               showsVerticalScrollIndicator={false}
-              removeClippedSubviews={true}
-              maxToRenderPerBatch={10}
-              windowSize={10}
             />
           )}
         </SafeAreaView>
@@ -227,6 +218,16 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 16,
     color: '#333',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#666',
   },
   ratesList: {
     flex: 1,
@@ -304,7 +305,6 @@ const styles = StyleSheet.create({
   },
 });
 
-// Add display name for debugging
 RatesBottomSheet.displayName = 'RatesBottomSheet';
 
 export default RatesBottomSheet;

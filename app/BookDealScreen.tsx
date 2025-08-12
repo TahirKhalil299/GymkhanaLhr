@@ -2,6 +2,7 @@ import { useNavigation } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Animated,
   Image,
@@ -11,14 +12,19 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/MaterialIcons";
+import ApiService from '../src/api/ApiService';
+import RequestType from '../src/api/RequestTypes';
+import { ApiListener } from '../src/api/ServiceProvider';
 import RatesBottomSheet from "./components/RatesBottomSheet";
 import { Rate } from "./type";
 
 const BookDealScreen: React.FC = () => {
+  const [currencies, setCurrencies] = useState<Rate[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const navigation = useNavigation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -28,42 +34,75 @@ const BookDealScreen: React.FC = () => {
   const [showAlert, setShowAlert] = useState<boolean>(false);
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
 
-  const bottomSheetRef = useRef<any>(null);
+  useEffect(() => {
+    fetchCurrencyRates();
+  }, []);
 
-  // Track selected currencies separately for buy and sell
+  const fetchCurrencyRates = () => {
+    setIsLoading(true);
+    
+    const listener: ApiListener = {
+      onRequestStarted: () => {
+        console.log('Currency rates request started');
+      },
+      onRequestSuccess: async (response, data, tag) => {
+        try {
+          const responseData = JSON.parse(data);
+          console.log('Parsed currency rates data:', responseData);
+          
+          if (responseData.data?.Rates) {
+            const formattedRates = responseData.data.Rates.map((rate: any, index: number) => ({
+              id: index.toString(),
+              currency: rate.Currency,
+              countryName: rate.Curr_Country || rate.Currency,
+              buyRate: parseFloat(rate.Buy_Rate),
+              sellRate: parseFloat(rate.Sell_Rate),
+              imagePath: rate.ImagePath || 'https://via.placeholder.com/32x32/cccccc/000000?text=?'
+            }));
+            setCurrencies(formattedRates);
+          } else {
+            console.log('No rates data found in response');
+            setCurrencies([]);
+          }
+        } catch (error) {
+          console.error('Error processing currency rates response:', error);
+          setCurrencies([]);
+        }
+      },
+      onRequestFailure: (error, message, errors, tag) => {
+        console.log('Currency rates failed:', message);
+        setCurrencies([]);
+      },
+      onRequestEnded: () => {
+        console.log('Currency rates request ended');
+        setIsLoading(false);
+      },
+      onError: (response, message, tag) => {
+        console.log('Currency rates error:', message);
+        setCurrencies([]);
+        setIsLoading(false);
+      }
+    };
+
+    try {
+      const { serviceProvider } = require('../src/api/ServiceProvider');
+      serviceProvider.sendApiCall(
+        ApiService.getCurrencyRates(),
+        RequestType.GET_RATE_LIST,
+        listener
+      );
+    } catch (error) {
+      console.error('Currency rates error:', error);
+      setCurrencies([]);
+      setIsLoading(false);
+    }
+  };
+
+  const bottomSheetRef = useRef<any>(null);
   const [buyCurrency, setBuyCurrency] = useState<Rate | null>(null);
   const [sellCurrency, setSellCurrency] = useState<Rate | null>(null);
   const [selectedCurrency, setSelectedCurrency] = useState<Rate | null>(null);
 
-  // Mock data for rates
-  const mockRates: Rate[] = [
-    {
-      id: "1",
-      currency: "USD",
-      countryName: "United States",
-      buyRate: 285.85,
-      sellRate: 288.0,
-      imagePath: "https://flagcdn.com/w320/us.png",
-    },
-    {
-      id: "2",
-      currency: "GBP",
-      countryName: "United Kingdom",
-      buyRate: 0.73,
-      sellRate: 0.75,
-      imagePath: "https://flagcdn.com/w320/gb.png",
-    },
-    {
-      id: "3",
-      currency: "EUR",
-      countryName: "Europe",
-      buyRate: 0.85,
-      sellRate: 0.87,
-      imagePath: "https://flagcdn.com/w320/eu.png",
-    },
-  ];
-
-  // Update selected currency based on active tab
   useEffect(() => {
     setSelectedCurrency(activeTab === "buy" ? buyCurrency : sellCurrency);
   }, [activeTab, buyCurrency, sellCurrency]);
@@ -87,6 +126,7 @@ const BookDealScreen: React.FC = () => {
   };
 
   const handleFromPress = () => {
+    if (isLoading) return;
     Keyboard.dismiss();
     bottomSheetRef.current?.open();
   };
@@ -146,7 +186,6 @@ const BookDealScreen: React.FC = () => {
     calculateConversion();
   }, [amount, selectedCurrency, activeTab]);
 
-  // Clear selections when leaving screen
   useEffect(() => {
     const unsubscribe = navigation.addListener("blur", () => {
       setBuyCurrency(null);
@@ -216,7 +255,7 @@ const BookDealScreen: React.FC = () => {
         {/* Content */}
         <View className="flex-1 px-4 pt-6">
           {/* Currency Row */}
-          <View className="flex-row justify-be  tween mb-4">
+          <View className="flex-row justify-between mb-4">
             <View className="flex-1 mr-4">
               <Text className="text-sm font-semibold text-gray-600 mb-2">
                 {selectedCurrency?.currency || "Select Currency"}
@@ -224,12 +263,21 @@ const BookDealScreen: React.FC = () => {
               <TouchableOpacity
                 className="flex-row items-center justify-between bg-white rounded-lg p-4 h-14"
                 onPress={handleFromPress}
+                disabled={isLoading}
               >
-                {selectedCurrency ? (
+                {isLoading ? (
+                  <View className="flex-row items-center">
+                    <ActivityIndicator size="small" color="#666" />
+                    <Text className="text-base text-gray-400 ml-3">
+                      Loading currencies...
+                    </Text>
+                  </View>
+                ) : selectedCurrency ? (
                   <View className="flex-row items-center">
                     <Image
                       source={{ uri: selectedCurrency.imagePath }}
-                      className="w-8 h-8 rounded-full mr-3"
+                      className="w-10 h-10 rounded-full mr-3"
+                      defaultSource={{ uri: 'https://via.placeholder.com/32x32/cccccc/000000?text=?' }}
                     />
                     <Text className="text-base font-semibold text-gray-800">
                       {selectedCurrency.currency}
@@ -240,7 +288,9 @@ const BookDealScreen: React.FC = () => {
                     Select {activeTab === "buy" ? "Buy" : "Sell"}
                   </Text>
                 )}
-                <Icon name="keyboard-arrow-down" size={24} color="#666" />
+                {!isLoading && (
+                  <Icon name="keyboard-arrow-down" size={24} color="#666" />
+                )}
               </TouchableOpacity>
             </View>
 
@@ -256,6 +306,7 @@ const BookDealScreen: React.FC = () => {
                 placeholderTextColor="#999"
                 keyboardType="numeric"
                 returnKeyType="done"
+                editable={!!selectedCurrency}
               />
             </View>
           </View>
@@ -264,18 +315,15 @@ const BookDealScreen: React.FC = () => {
           <View className="h-px bg-gray-200 my-4" />
 
           {/* PKR Section */}
-          <View className="mb-4">
-            <Text className="text-sm font-semibold text-gray-600 mb-2">
-              PKR
-            </Text>
-            <View className="flex-row items-center">
+          <View className="flex-row items-center justify-between mb-4">
+            <View className="flex-row items-center ml-5">
               <Image
                 source={{ uri: "https://flagcdn.com/w320/pk.png" }}
-                className="w-8 h-8 rounded-full mr-3"
+                className="w-10 h-10 rounded-full mr-3"
               />
-              <Text className="text-base font-semibold text-gray-800">PKR</Text>
+              <Text className="text-base font-medium text-gray-800">PKR</Text>
             </View>
-            <Text className="text-base font-semibold text-orange-500 mt-2 text-right">
+            <Text style={{ fontSize: 18 }} className="font-medium text-gray-800 mr-8">
               {selectedCurrency
                 ? (activeTab === "buy"
                     ? selectedCurrency.buyRate
@@ -376,9 +424,10 @@ const BookDealScreen: React.FC = () => {
 
       <RatesBottomSheet
         ref={bottomSheetRef}
-        rates={mockRates}
+        rates={currencies}
         isForBuying={activeTab === "buy"}
         onRateSelect={handleRateSelect}
+        isLoading={isLoading}
       />
     </SafeAreaView>
   );

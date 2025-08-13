@@ -1,5 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import * as FileSystem from 'expo-file-system';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
@@ -8,6 +9,7 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  Keyboard,
   Modal,
   ScrollView,
   Text,
@@ -16,27 +18,18 @@ import {
   View
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import ApiService from '../src/api/ApiService';
 import AuthService from '../src/api/AuthService';
+import RequestType from '../src/api/RequestTypes';
 import { ApiListener } from '../src/api/ServiceProvider';
+import { Country } from '../src/api/models/CountryNameResponse';
+import { OccupationCategory } from '../src/api/models/OccupationResponse';
+import { Province } from '../src/api/models/ProvinceNameReaponse';
 import { UserDataManager } from '../utils/userDataManager';
 
-// Define types for dropdown items
 type DropdownItem = {
   id: string;
   name: string;
-};
-
-type OccupationItem = {
-  CatID: string;
-  CatDesc: string;
-};
-
-type CountryItem = {
-  Country: string;
-};
-
-type ProvinceItem = {
-  Province: string;
 };
 
 type UserData = {
@@ -86,22 +79,22 @@ const Profile = () => {
   });
 
   // Dropdown data
-  const [titlesList, setTitlesList] = useState<DropdownItem[]>([
+  const [titlesList] = useState<DropdownItem[]>([
     { id: '1', name: 'MISS' },
     { id: '2', name: 'MR' },
     { id: '3', name: 'MRS' },
     { id: '4', name: 'MS' }
   ]);
 
-  const [gendersList, setGendersList] = useState<DropdownItem[]>([
+  const [gendersList] = useState<DropdownItem[]>([
     { id: '1', name: 'Female' },
     { id: '2', name: 'Male' },
     { id: '3', name: 'Other' }
   ]);
 
-  const [occupationsList, setOccupationsList] = useState<OccupationItem[]>([]);
-  const [countriesList, setCountriesList] = useState<CountryItem[]>([]);
-  const [provincesList, setProvincesList] = useState<ProvinceItem[]>([]);
+  const [occupationsList, setOccupationsList] = useState<OccupationCategory[]>([]);
+  const [countriesList, setCountriesList] = useState<Country[]>([]);
+  const [provincesList, setProvincesList] = useState<Province[]>([]);
 
   // Selected IDs
   const [titleId, setTitleId] = useState('');
@@ -110,100 +103,177 @@ const Profile = () => {
 
   // UI state
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [datePickerMode, setDatePickerMode] = useState<'date' | 'time'>('date');
+  const [datePickerMode] = useState<'date' | 'time'>('date');
   const [selectedDateField, setSelectedDateField] = useState<'cnicExpiry' | 'dateOfBirth'>('cnicExpiry');
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [dropdownType, setDropdownType] = useState<'title' | 'gender' | 'occupation' | 'country' | 'province'>('title');
-  const [dropdownItems, setDropdownItems] = useState<DropdownItem[]>([]);
+  const [showBottomSheet, setShowBottomSheet] = useState(false);
+  const [bottomSheetType, setBottomSheetType] = useState<'title' | 'gender' | 'occupation' | 'country' | 'province'>('title');
+  const [bottomSheetItems, setBottomSheetItems] = useState<DropdownItem[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredItems, setFilteredItems] = useState<DropdownItem[]>([]);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [base64Image, setBase64Image] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showImagePreview, setShowImagePreview] = useState(false);
   const [previewImage, setPreviewImage] = useState('');
 
-  // Fetch user data on component mount
+  // Fetch initial data
   useEffect(() => {
     fetchUserData();
     fetchOccupations();
     fetchCountries();
   }, []);
 
-const fetchUserData = async () => {
-  setIsLoading(true);
-  
-  try {
-    // Get stored credentials using the correct method name
-    const credentials = await UserDataManager.getSavedCredentials();
-    
-    // Check if credentials exist and are complete
-    if (!credentials || !credentials.userId || !credentials.password) {
-      Alert.alert('Error', 'User credentials not found. Please login again.');
-      router.replace('/login');
-      return;
+  // Fetch provinces when country changes
+  useEffect(() => {
+    if (formData.countryOfStay) {
+      fetchProvinces(formData.countryOfStay);
+    } else {
+      setProvincesList([]);
+      setFormData(prev => ({ ...prev, province: '' }));
     }
+  }, [formData.countryOfStay]);
 
-    console.log('Using saved credentials for user data fetch - userId:', credentials.userId);
+  // Filter items based on search query
+  useEffect(() => {
+    if (searchQuery) {
+      const filtered = bottomSheetItems.filter(item =>
+        item.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFilteredItems(filtered);
+    } else {
+      setFilteredItems(bottomSheetItems);
+    }
+  }, [searchQuery, bottomSheetItems]);
 
+  const fetchUserData = async () => {
+    setIsLoading(true);
+    try {
+      const credentials = await UserDataManager.getSavedCredentials();
+      if (!credentials?.userId || !credentials.password) {
+        Alert.alert('Error', 'User credentials not found. Please login again.');
+        router.replace('/login');
+        return;
+      }
+
+      const listener: ApiListener = {
+        onRequestSuccess: async (response, data) => {
+          try {
+            const responseData = JSON.parse(data);
+            if (responseData.StatusCode === "00" && responseData.data) {
+              updateFormData(responseData.data);
+              if (responseData.data.Img_D?.startsWith('data:image')) {
+                setBase64Image(responseData.data.Img_D.split(',')[1]);
+              }
+            }
+          } catch (error) {
+            console.error('Error processing user data:', error);
+          }
+          setIsLoading(false);
+        },
+        onRequestFailure: () => setIsLoading(false),
+      };
+
+      await new AuthService().login(credentials.userId, credentials.password, listener);
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      setIsLoading(false);
+    }
+  };
+
+  const fetchOccupations = () => {
+    setIsLoading(true);
     const listener: ApiListener = {
-      onRequestStarted: () => {
-        console.log("User data request started");
-      },
-      onRequestSuccess: async (response, data, tag) => {
+      onRequestSuccess: async (response, data) => {
         try {
           const responseData = JSON.parse(data);
-          console.log('User data response:', responseData);
-          
-          if (responseData.StatusCode === "00" && responseData.data) {
-            const userData: UserData = responseData.data;
-            updateFormData(userData);
-            
-            // Set CNIC image if available
-            if (userData.Img_D && userData.Img_D.startsWith('data:image')) {
-              setBase64Image(userData.Img_D.split(',')[1]);
-            }
-            
-            console.log('User data updated successfully');
-          } else {
-            console.log('Invalid response or no data:', responseData);
-            Alert.alert('Error', responseData.StatusDesc || 'No user data found');
+          if (responseData.data?.OccupationCategory) {
+            setOccupationsList(responseData.data.OccupationCategory);
           }
         } catch (error) {
-          console.error('Error processing user data:', error);
-          Alert.alert('Error', 'Failed to process user data');
+          console.error('Error processing occupations:', error);
         }
-      },
-      onRequestFailure: (error, message, errors, tag) => {
-        console.log('User data request failed:', message);
-        Alert.alert('Error', message || 'Failed to fetch user data');
-      },
-      onRequestEnded: () => {
-        console.log('User data request ended');
         setIsLoading(false);
       },
-      onError: (response, message, tag) => {
-        console.log('User data request error:', message);
-        Alert.alert('Error', message || 'Error fetching user data');
-        setIsLoading(false);
-      }
+      onRequestFailure: () => setIsLoading(false),
     };
 
-    // Use the saved credentials for login/authentication
-    const authService = new AuthService();
-    await authService.login(credentials.userId, credentials.password, listener);
-    
-  } catch (error) {
-    console.error('Error fetching user data:', error);
-    Alert.alert('Error', 'An unexpected error occurred while fetching user data');
-    setIsLoading(false);
-  }
-};
+    try {
+      const { serviceProvider } = require('../src/api/ServiceProvider');
+      serviceProvider.sendApiCall(
+        ApiService.getOccupation(),
+        RequestType.GET_OCCUPATION_LIST,
+        listener
+      );
+    } catch (error) {
+      console.error('Occupations error:', error);
+      setIsLoading(false);
+    }
+  };
+
+  const fetchCountries = () => {
+    setIsLoading(true);
+    const listener: ApiListener = {
+      onRequestSuccess: async (response, data) => {
+        try {
+          const responseData = JSON.parse(data);
+          if (responseData.data?.Country) {
+            setCountriesList(responseData.data.Country);
+          }
+        } catch (error) {
+          console.error('Error processing countries:', error);
+        }
+        setIsLoading(false);
+      },
+      onRequestFailure: () => setIsLoading(false),
+    };
+
+    try {
+      const { serviceProvider } = require('../src/api/ServiceProvider');
+      serviceProvider.sendApiCall(
+        ApiService.getCountryNames(),
+        RequestType.GET_COUNTRY_LIST,
+        listener
+      );
+    } catch (error) {
+      console.error('Countries error:', error);
+      setIsLoading(false);
+    }
+  };
+
+  const fetchProvinces = (countryName: string) => {
+    setIsLoading(true);
+    const listener: ApiListener = {
+      onRequestSuccess: async (response, data) => {
+        try {
+          const responseData = JSON.parse(data);
+          if (responseData.data?.Province) {
+            setProvincesList(responseData.data.Province);
+          }
+        } catch (error) {
+          console.error('Error processing provinces:', error);
+        }
+        setIsLoading(false);
+      },
+      onRequestFailure: () => setIsLoading(false),
+    };
+
+    try {
+      const { serviceProvider } = require('../src/api/ServiceProvider');
+      serviceProvider.sendApiCall(
+        ApiService.getProvience(countryName),
+        RequestType.GET_PROVINCE_LIST,
+        listener
+      );
+    } catch (error) {
+      console.error('Provinces error:', error);
+      setIsLoading(false);
+    }
+  };
 
   const updateFormData = (userData: UserData) => {
-    // Parse date strings (assuming format like "7/10/2007 12:00:00 AM")
     const parseDate = (dateStr: string) => {
       if (!dateStr) return '';
-      const datePart = dateStr.split(' ')[0]; // Get just the date part
-      const [month, day, year] = datePart.split('/');
+      const [month, day, year] = dateStr.split(' ')[0].split('/');
       return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
     };
 
@@ -227,164 +297,76 @@ const fetchUserData = async () => {
       address: userData.C_Add1 || ''
     });
 
-    // Set selected IDs
     setTitleId(userData.C_Title || '');
     setGenderId(userData.C_Gender || '');
     setOccupationId(userData.C_Occupation_Cat || '');
+  };
+
+  const showBottomSheetMenu = (type: typeof bottomSheetType) => {
+    Keyboard.dismiss();
+    setBottomSheetType(type);
+    setSearchQuery('');
     
-    // Fetch provinces if country is set
-    if (userData.C_Country) {
-      fetchProvinces(userData.C_Country);
-    }
-  };
-
-  const fetchOccupations = () => {
-    setIsLoading(true);
-    // Mock API call - replace with actual API call if available
-    setTimeout(() => {
-      setOccupationsList([
-        { CatID: '1', CatDesc: 'Business' },
-        { CatID: '2', CatDesc: 'Employee' },
-        { CatID: '3', CatDesc: 'Student' },
-        { CatID: '4', CatDesc: 'Other' }
-      ]);
-      setIsLoading(false);
-    }, 500);
-  };
-
-  const fetchCountries = () => {
-    setIsLoading(true);
-    // Mock API call - replace with actual API call if available
-    setTimeout(() => {
-      setCountriesList([
-        { Country: 'Pakistan' },
-        { Country: 'United States' },
-        { Country: 'United Kingdom' },
-        { Country: 'Canada' }
-      ]);
-      setIsLoading(false);
-    }, 500);
-  };
-
-  const fetchProvinces = (country: string) => {
-    setIsLoading(true);
-    // Mock API call based on selected country
-    setTimeout(() => {
-      if (country === 'Pakistan') {
-        setProvincesList([
-          { Province: 'Punjab' },
-          { Province: 'Sindh' },
-          { Province: 'KPK' },
-          { Province: 'Balochistan' }
-        ]);
-      } else {
-        setProvincesList([]);
-      }
-      setIsLoading(false);
-    }, 500);
-  };
-
-  const handleBack = () => {
-    router.back();
-  };
-
-  const handleSubmit = () => {
-    if (validateAllFields()) {
-      // Submit logic here
-      console.log('Form submitted:', formData);
-      // Call your API to update profile
-      Alert.alert('Success', 'Profile updated successfully');
-    }
-  };
-
-  // Date picker handlers
-  const showDatePickerDialog = (field: 'cnicExpiry' | 'dateOfBirth') => {
-    setSelectedDateField(field);
-    setShowDatePicker(true);
-  };
-
-  const handleDateChange = (event: any, selectedDate?: Date) => {
-    setShowDatePicker(false);
-    if (selectedDate) {
-      const formattedDate = formatDate(selectedDate);
-      if (selectedDateField === 'cnicExpiry') {
-        setFormData({ ...formData, cnicExpiry: formattedDate });
-      } else {
-        setFormData({ ...formData, dateOfBirth: formattedDate });
-      }
-    }
-  };
-
-  const formatDate = (date: Date): string => {
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
-  };
-
-  // Dropdown handlers
-  const showDropdownMenu = (type: 'title' | 'gender' | 'occupation' | 'country' | 'province') => {
-    setDropdownType(type);
-    
+    let items: DropdownItem[] = [];
     switch (type) {
       case 'title':
-        setDropdownItems(titlesList);
+        items = titlesList;
         break;
       case 'gender':
-        setDropdownItems(gendersList);
+        items = gendersList;
         break;
       case 'occupation':
-        setDropdownItems(occupationsList.map(item => ({ id: item.CatID, name: item.CatDesc })));
+        items = occupationsList.map(item => ({ id: item.Cat_ID, name: item.Cat_Desc }));
         break;
       case 'country':
-        setDropdownItems(countriesList.map(item => ({ id: item.Country, name: item.Country })));
+        items = countriesList.map(item => ({ id: item.Country_Code, name: item.Country }));
         break;
       case 'province':
-        if (formData.countryOfStay) {
-          setDropdownItems(provincesList.map(item => ({ id: item.Province, name: item.Province })));
-        } else {
-          alert('Please select a country first');
+        if (!formData.countryOfStay) {
+          Alert.alert('Please select a country first');
           return;
         }
+        items = provincesList.map(item => ({ id: item.Province_Code, name: item.Province }));
         break;
     }
-    
-    setShowDropdown(true);
+
+    setBottomSheetItems(items);
+    setFilteredItems(items);
+    setShowBottomSheet(true);
   };
 
-  const handleDropdownSelect = (item: DropdownItem) => {
-    setShowDropdown(false);
+  const handleBottomSheetSelect = (item: DropdownItem) => {
+    setShowBottomSheet(false);
     
-    switch (dropdownType) {
+    switch (bottomSheetType) {
       case 'title':
-        setFormData({ ...formData, title: item.name });
+        setFormData(prev => ({ ...prev, title: item.name }));
         setTitleId(item.id);
         break;
       case 'gender':
-        setFormData({ ...formData, gender: item.name });
+        setFormData(prev => ({ ...prev, gender: item.name }));
         setGenderId(item.id);
         break;
       case 'occupation':
-        setFormData({ ...formData, occupation: item.name });
+        setFormData(prev => ({ ...prev, occupation: item.name }));
         setOccupationId(item.id);
         break;
       case 'country':
-        setFormData({ 
-          ...formData, 
+        setFormData(prev => ({ 
+          ...prev, 
           countryOfStay: item.name,
-          province: '' // Reset province when country changes
-        });
-        fetchProvinces(item.name);
+          province: ''
+        }));
         break;
       case 'province':
-        setFormData({ ...formData, province: item.name });
+        setFormData(prev => ({ ...prev, province: item.name }));
         break;
     }
   };
 
-  // Image picker handlers
+  // Image handling functions
   const pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
+    const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 3],
@@ -393,41 +375,18 @@ const fetchUserData = async () => {
     });
 
     if (!result.canceled) {
-      const selected = result.assets[0];
-      // Compress and resize the image
-      const manipResult = await manipulateAsync(
-        selected.uri,
-        [{ resize: { width: 800 } }],
-        { compress: 0.7, format: SaveFormat.JPEG, base64: true }
-      );
-
-      if (manipResult.base64) {
-        setSelectedImage(manipResult.uri);
-        setBase64Image(manipResult.base64);
-      }
+      processImage(result.assets[0].uri);
     }
-  };
-
-  const showImageOptions = () => {
-    Alert.alert(
-      'Select Image Source',
-      '',
-      [
-        { text: 'Take Photo', onPress: () => takePhoto() },
-        { text: 'Choose from Gallery', onPress: () => pickImage() },
-        { text: 'Cancel', style: 'cancel' }
-      ]
-    );
   };
 
   const takePhoto = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
-      alert('Sorry, we need camera permissions to make this work!');
+      Alert.alert('Permission required', 'We need camera access to take photos');
       return;
     }
 
-    let result = await ImagePicker.launchCameraAsync({
+    const result = await ImagePicker.launchCameraAsync({
       allowsEditing: true,
       aspect: [4, 3],
       quality: 0.5,
@@ -435,19 +394,43 @@ const fetchUserData = async () => {
     });
 
     if (!result.canceled) {
-      const selected = result.assets[0];
-      // Compress and resize the image
-      const manipResult = await manipulateAsync(
-        selected.uri,
-        [{ resize: { width: 800 } }],
-        { compress: 0.7, format: SaveFormat.JPEG, base64: true }
-      );
-
-      if (manipResult.base64) {
-        setSelectedImage(manipResult.uri);
-        setBase64Image(manipResult.base64);
-      }
+      processImage(result.assets[0].uri);
     }
+  };
+
+ const processImage = async (uri: string) => {
+  try {
+    // First compress the image
+    const manipResult = await manipulateAsync(
+      uri,
+      [{ resize: { width: 800 } }],
+      { compress: 0.7, format: SaveFormat.JPEG }
+    );
+    
+    // Store the URI for upload (don't convert to base64 unless needed)
+    setSelectedImage(manipResult.uri);
+    
+    // If you need a preview, you can keep the base64 version
+    const base64Result = await FileSystem.readAsStringAsync(manipResult.uri, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+    setBase64Image(base64Result);
+  } catch (error) {
+    console.error('Error processing image:', error);
+    Alert.alert('Error', 'Failed to process image');
+  }
+};
+
+  const showImageOptions = () => {
+    Alert.alert(
+      'Select Image Source',
+      '',
+      [
+        { text: 'Take Photo', onPress: takePhoto },
+        { text: 'Choose from Gallery', onPress: pickImage },
+        { text: 'Cancel', style: 'cancel' }
+      ]
+    );
   };
 
   const removeImage = () => {
@@ -460,107 +443,95 @@ const fetchUserData = async () => {
       setPreviewImage(selectedImage || `data:image/jpeg;base64,${base64Image}`);
       setShowImagePreview(true);
     } else {
-      alert('Please upload an image first');
+      Alert.alert('No image', 'Please upload an image first');
     }
   };
 
-  // Validation
+  // Date handling
+  const showDatePickerDialog = (field: typeof selectedDateField) => {
+    setSelectedDateField(field);
+    setShowDatePicker(true);
+  };
+
+  const handleDateChange = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      const day = selectedDate.getDate().toString().padStart(2, '0');
+      const month = (selectedDate.getMonth() + 1).toString().padStart(2, '0');
+      const year = selectedDate.getFullYear();
+      const formattedDate = `${day}/${month}/${year}`;
+
+      setFormData(prev => ({
+        ...prev,
+        [selectedDateField]: formattedDate
+      }));
+    }
+  };
+
+  // Form submission
+  const handleSubmit = () => {
+    if (validateAllFields()) {
+      // Submit logic here
+      console.log('Form submitted:', formData);
+      Alert.alert('Success', 'Profile updated successfully');
+    }
+  };
+
   const validateAllFields = (): boolean => {
-    let isValid = true;
-    const errors: Partial<typeof formData> = {};
+    const requiredFields = [
+      { field: 'title', message: 'Please select a title' },
+      { field: 'fullName', message: 'Full name is required', minLength: 2 },
+      { field: 'fatherName', message: 'Father name is required', minLength: 2 },
+      { field: 'gender', message: 'Please select gender' },
+      { field: 'cnicNo', message: 'CNIC is required', exactLength: 13 },
+      { field: 'cnicExpiry', message: 'CNIC expiry date is required' },
+      { field: 'dateOfBirth', message: 'Date of birth is required' },
+      { field: 'occupation', message: 'Please select occupation' },
+      { field: 'countryOfStay', message: 'Country is required' },
+      { field: 'province', message: 'Province is required' },
+      { field: 'cityOfStay', message: 'City is required', minLength: 2 },
+      { field: 'address', message: 'Address is required', minLength: 5 }
+    ];
 
-    // CNIC image validation
+    for (const { field, message, minLength, exactLength } of requiredFields) {
+      const value = formData[field as keyof typeof formData];
+      
+      if (!value) {
+        Alert.alert('Validation Error', message);
+        return false;
+      }
+
+      if (minLength && value.length < minLength) {
+        Alert.alert('Validation Error', `${message} (minimum ${minLength} characters)`);
+        return false;
+      }
+
+      if (exactLength && value.length !== exactLength) {
+        Alert.alert('Validation Error', `${message} (must be ${exactLength} characters)`);
+        return false;
+      }
+    }
+
     if (!base64Image && !selectedImage) {
-      alert('Please upload your CNIC image');
-      isValid = false;
+      Alert.alert('Validation Error', 'Please upload your CNIC image');
+      return false;
     }
 
-    // Title validation
-    if (!formData.title || !titleId) {
-      errors.title = 'Please select a title';
-      isValid = false;
-    }
+     if (!base64Image && !selectedImage) {
+    Alert.alert('Validation Error', 'Please upload your CNIC image');
+    return false;
+  }
 
-    // Name validations
-    if (!formData.fullName || formData.fullName.length < 2) {
-      errors.fullName = 'Full name must be at least 2 characters';
-      isValid = false;
-    }
-
-    if (!formData.fatherName || formData.fatherName.length < 2) {
-      errors.fatherName = 'Father name must be at least 2 characters';
-      isValid = false;
-    }
-
-    // Gender validation
-    if (!formData.gender || !genderId) {
-      errors.gender = 'Please select gender';
-      isValid = false;
-    }
-
-    // CNIC validation
-    if (!formData.cnicNo || formData.cnicNo.length < 13) {
-      errors.cnicNo = 'CNIC must be 13 digits';
-      isValid = false;
-    }
-
-    // CNIC Expiry validation
-    if (!formData.cnicExpiry) {
-      errors.cnicExpiry = 'CNIC expiry date is required';
-      isValid = false;
-    }
-
-    // Date of Birth validation
-    if (!formData.dateOfBirth) {
-      errors.dateOfBirth = 'Date of birth is required';
-      isValid = false;
-    }
-
-    // Occupation validation
-    if (!formData.occupation || !occupationId) {
-      errors.occupation = 'Please select occupation';
-      isValid = false;
-    }
-
-    // Country validation
-    if (!formData.countryOfStay) {
-      errors.countryOfStay = 'Country is required';
-      isValid = false;
-    }
-
-    // Province validation
-    if (!formData.province) {
-      errors.province = 'Province is required';
-      isValid = false;
-    }
-
-    // City validation
-    if (!formData.cityOfStay || formData.cityOfStay.length < 2) {
-      errors.cityOfStay = 'City must be at least 2 characters';
-      isValid = false;
-    }
-
-    // Address validation
-    if (!formData.address || formData.address.length < 5) {
-      errors.address = 'Address must be at least 5 characters';
-      isValid = false;
-    }
-
-    if (!isValid) {
-      alert('Please fill all required fields correctly');
-    }
-
-    return isValid;
+    return true;
   };
 
   return (
     <View className="flex-1 bg-gray-100" style={{ paddingTop: insets.top }}>
       {/* Header */}
-      <View className="flex-row items-center px-4 py-3 ">
-        <TouchableOpacity onPress={handleBack} className="w-10 h-10 justify-center items-center">
+      <View className="flex-row items-center px-4 py-3">
+        <TouchableOpacity onPress={() => router.back()} className="w-10 h-10 justify-center items-center">
           <MaterialIcons name="arrow-back" size={24} color="black" />
         </TouchableOpacity>
-        
         <Text className="flex-1 text-center text-base font-semibold text-gray-800 mr-8">
           Profile
         </Text>
@@ -570,9 +541,8 @@ const fetchUserData = async () => {
       <ScrollView 
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 24 }}
-        showsVerticalScrollIndicator={true}
+        showsVerticalScrollIndicator={false}
       >
-        {/* Form Fields */}
         <View className="px-5">
           {/* User ID */}
           <View className="mt-2.5">
@@ -580,7 +550,6 @@ const fetchUserData = async () => {
             <TextInput
               className="bg-white rounded border border-gray-300 p-2.5 text-xs text-black"
               value={formData.userId}
-              onChangeText={(text) => setFormData({...formData, userId: text})}
               editable={false}
               placeholder="Enter user ID"
               placeholderTextColor="#b7b4b0"
@@ -593,7 +562,6 @@ const fetchUserData = async () => {
             <TextInput
               className="bg-white rounded border border-gray-300 p-2.5 text-xs text-black"
               value={formData.email}
-              onChangeText={(text) => setFormData({...formData, email: text})}
               editable={false}
               keyboardType="email-address"
               placeholder="Enter email"
@@ -606,7 +574,7 @@ const fetchUserData = async () => {
             <Text className="text-xs font-medium text-gray-600 mb-1">Title</Text>
             <TouchableOpacity 
               className="bg-white rounded border border-gray-300 p-2.5 flex-row justify-between items-center"
-              onPress={() => showDropdownMenu('title')}
+              onPress={() => showBottomSheetMenu('title')}
             >
               <Text className="text-xs text-black">{formData.title || 'Select title'}</Text>
               <MaterialIcons name="arrow-drop-down" size={24} color="black" />
@@ -619,7 +587,7 @@ const fetchUserData = async () => {
             <TextInput
               className="bg-white rounded border border-gray-300 p-2.5 text-xs text-black"
               value={formData.fullName}
-              onChangeText={(text) => setFormData({...formData, fullName: text})}
+              onChangeText={(text) => setFormData(prev => ({ ...prev, fullName: text }))}
               placeholder="Enter first name"
               placeholderTextColor="#b7b4b0"
             />
@@ -631,7 +599,7 @@ const fetchUserData = async () => {
             <TextInput
               className="bg-white rounded border border-gray-300 p-2.5 text-xs text-black"
               value={formData.fatherName}
-              onChangeText={(text) => setFormData({...formData, fatherName: text})}
+              onChangeText={(text) => setFormData(prev => ({ ...prev, fatherName: text }))}
               placeholder="Enter father name"
               placeholderTextColor="#b7b4b0"
             />
@@ -642,7 +610,7 @@ const fetchUserData = async () => {
             <Text className="text-xs font-medium text-gray-600 mb-1">Gender</Text>
             <TouchableOpacity 
               className="bg-white rounded border border-gray-300 p-2.5 flex-row justify-between items-center"
-              onPress={() => showDropdownMenu('gender')}
+              onPress={() => showBottomSheetMenu('gender')}
             >
               <Text className="text-xs text-black">{formData.gender || 'Select gender'}</Text>
               <MaterialIcons name="arrow-drop-down" size={24} color="black" />
@@ -655,8 +623,7 @@ const fetchUserData = async () => {
             <TextInput
               className="bg-white rounded border border-gray-300 p-2.5 text-xs text-black"
               value={formData.cnicNo}
-              onChangeText={(text) => setFormData({...formData, cnicNo: text})}
-              editable={false}
+              onChangeText={(text) => setFormData(prev => ({ ...prev, cnicNo: text }))}
               keyboardType="numeric"
               placeholder="Enter CNIC"
               placeholderTextColor="#b7b4b0"
@@ -680,8 +647,7 @@ const fetchUserData = async () => {
             <TextInput
               className="bg-white rounded border border-gray-300 p-2.5 text-xs text-black"
               value={formData.mobileNo}
-              onChangeText={(text) => setFormData({...formData, mobileNo: text})}
-              editable={false}
+              onChangeText={(text) => setFormData(prev => ({ ...prev, mobileNo: text }))}
               keyboardType="phone-pad"
               placeholder="Enter mobile number"
               placeholderTextColor="#b7b4b0"
@@ -704,7 +670,7 @@ const fetchUserData = async () => {
             <Text className="text-xs font-medium text-gray-600 mb-1">Occupation</Text>
             <TouchableOpacity 
               className="bg-white rounded border border-gray-300 p-2.5 flex-row justify-between items-center"
-              onPress={() => showDropdownMenu('occupation')}
+              onPress={() => showBottomSheetMenu('occupation')}
             >
               <Text className="text-xs text-black">{formData.occupation || 'Select occupation'}</Text>
               <MaterialIcons name="arrow-drop-down" size={24} color="black" />
@@ -717,8 +683,8 @@ const fetchUserData = async () => {
             <TextInput
               className="bg-white rounded border border-gray-300 p-2.5 text-xs text-black h-20"
               value={formData.occupationDetails}
-              onChangeText={(text) => setFormData({...formData, occupationDetails: text})}
-              multiline={true}
+              onChangeText={(text) => setFormData(prev => ({ ...prev, occupationDetails: text }))}
+              multiline
               placeholder="Enter occupation details"
               placeholderTextColor="#b7b4b0"
             />
@@ -730,7 +696,6 @@ const fetchUserData = async () => {
             <TextInput
               className="bg-white rounded border border-gray-300 p-2.5 text-xs text-black"
               value={formData.nationality}
-              onChangeText={(text) => setFormData({...formData, nationality: text})}
               editable={false}
               placeholder="Enter nationality"
               placeholderTextColor="#b7b4b0"
@@ -742,7 +707,7 @@ const fetchUserData = async () => {
             <Text className="text-xs font-medium text-gray-600 mb-1">Country</Text>
             <TouchableOpacity 
               className="bg-white rounded border border-gray-300 p-2.5 flex-row justify-between items-center"
-              onPress={() => showDropdownMenu('country')}
+              onPress={() => showBottomSheetMenu('country')}
             >
               <Text className="text-xs text-black">{formData.countryOfStay || 'Select country'}</Text>
               <MaterialIcons name="arrow-drop-down" size={24} color="black" />
@@ -754,7 +719,7 @@ const fetchUserData = async () => {
             <Text className="text-xs font-medium text-gray-600 mb-1">Province</Text>
             <TouchableOpacity 
               className="bg-white rounded border border-gray-300 p-2.5 flex-row justify-between items-center"
-              onPress={() => showDropdownMenu('province')}
+              onPress={() => showBottomSheetMenu('province')}
               disabled={!formData.countryOfStay}
             >
               <Text className="text-xs text-black">{formData.province || 'Select province'}</Text>
@@ -768,7 +733,7 @@ const fetchUserData = async () => {
             <TextInput
               className="bg-white rounded border border-gray-300 p-2.5 text-xs text-black"
               value={formData.cityOfStay}
-              onChangeText={(text) => setFormData({...formData, cityOfStay: text})}
+              onChangeText={(text) => setFormData(prev => ({ ...prev, cityOfStay: text }))}
               placeholder="Enter city"
               placeholderTextColor="#b7b4b0"
             />
@@ -780,8 +745,8 @@ const fetchUserData = async () => {
             <TextInput
               className="bg-white rounded border border-gray-300 p-2.5 text-xs text-black h-20"
               value={formData.address}
-              onChangeText={(text) => setFormData({...formData, address: text})}
-              multiline={true}
+              onChangeText={(text) => setFormData(prev => ({ ...prev, address: text }))}
+              multiline
               placeholder="Enter address"
               placeholderTextColor="#b7b4b0"
             />
@@ -819,7 +784,7 @@ const fetchUserData = async () => {
 
           {/* Submit Button */}
           <TouchableOpacity 
-            className="bg-button_background rounded-lg py-2.5 items-center justify-center mt-6 mb-6"
+            className="bg-blue-500 rounded-lg py-3 items-center justify-center mt-6 mb-6"
             onPress={handleSubmit}
           >
             <Text className="text-base font-medium text-white">
@@ -829,7 +794,7 @@ const fetchUserData = async () => {
         </View>
       </ScrollView>
 
-      {/* Date Picker Modal */}
+      {/* Date Picker */}
       {showDatePicker && (
         <DateTimePicker
           value={new Date()}
@@ -841,29 +806,51 @@ const fetchUserData = async () => {
         />
       )}
 
-      {/* Dropdown Modal */}
+      {/* Bottom Sheet */}
       <Modal
-        visible={showDropdown}
-        transparent={true}
+        visible={showBottomSheet}
+        transparent
         animationType="slide"
-        onRequestClose={() => setShowDropdown(false)}
+        onRequestClose={() => setShowBottomSheet(false)}
       >
         <View className="flex-1 justify-end bg-black/50">
-          <View className="bg-white rounded-t-2xl p-4 max-h-1/2">
-            {dropdownItems.map((item) => (
-              <TouchableOpacity
-                key={item.id}
-                className="py-4 border-b border-gray-100"
-                onPress={() => handleDropdownSelect(item)}
-              >
-                <Text className="text-base text-gray-800">{item.name}</Text>
-              </TouchableOpacity>
-            ))}
+          <View className="bg-white rounded-t-2xl p-4 max-h-[70%]">
+            {/* Search Bar */}
+            <View className="flex-row items-center bg-gray-100 rounded-lg px-3 py-2 mb-3">
+              <MaterialIcons name="search" size={20} color="gray" />
+              <TextInput
+                className="flex-1 ml-2 text-base text-black"
+                placeholder="Search..."
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                autoFocus
+              />
+              {searchQuery ? (
+                <TouchableOpacity onPress={() => setSearchQuery('')}>
+                  <MaterialIcons name="close" size={20} color="gray" />
+                </TouchableOpacity>
+              ) : null}
+            </View>
+
+            {/* Items List */}
+            <ScrollView className="max-h-[60%]">
+              {filteredItems.map((item) => (
+                <TouchableOpacity
+                  key={item.id}
+                  className="py-4 border-b border-gray-100"
+                  onPress={() => handleBottomSheetSelect(item)}
+                >
+                  <Text className="text-base text-gray-800">{item.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
+            {/* Cancel Button */}
             <TouchableOpacity
-              className="py-4 mt-2 items-center bg-gray-100 rounded-lg"
-              onPress={() => setShowDropdown(false)}
+              className="py-3 mt-10 items-center bg-button_background rounded-lg"
+              onPress={() => setShowBottomSheet(false)}
             >
-              <Text className="text-base text-orange-600 font-bold">Cancel</Text>
+              <Text className="text-base text-white font-bold">Cancel</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -872,7 +859,7 @@ const fetchUserData = async () => {
       {/* Image Preview Modal */}
       <Modal
         visible={showImagePreview}
-        transparent={true}
+        transparent
         animationType="fade"
         onRequestClose={() => setShowImagePreview(false)}
       >
@@ -894,7 +881,7 @@ const fetchUserData = async () => {
       {/* Loading Indicator */}
       {isLoading && (
         <View className="absolute inset-0 bg-black/30 justify-center items-center">
-          <ActivityIndicator size="large" color="#ec7124" />
+          <ActivityIndicator size="large" color="#3b82f6" />
         </View>
       )}
     </View>

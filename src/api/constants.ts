@@ -55,6 +55,10 @@ export const ENDPOINTS = {
   DEAL_LIST: "GetCustomerDeals",
   BRANCHES: "getDealBranches",
   PURPOSES: "GetPurpose",
+    GET_COUNTRIES: "getCountry",
+    GET_PROVINCES: "getProvince",
+        GET_OCCUPATION: "getOccupationCategory",
+        UPLOAD_DOCUMENT:"PostCustomerDocument"
 } as const;
 
 // Request Timeouts

@@ -18,7 +18,8 @@
       },
       "icon": "./assets/images/logo.png",
       "edgeToEdgeEnabled": true,
-      "package": "com.anonymous.GymKhanaLhr"
+      "package": "com.anonymous.GymKhanaLhr",
+      "permissions": ["READ_EXTERNAL_STORAGE"]
     },
     "web": {
       "favicon": "./assets/images/favicon.png"

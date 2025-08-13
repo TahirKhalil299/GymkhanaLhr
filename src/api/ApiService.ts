@@ -56,10 +56,6 @@ const ApiService = {
     return ApiClient.get(`${ENDPOINTS.CURRENCY.GET_RATES}?${queryParams.toString()}`);
   },
 
-
-
-
-    // Currency endpoints
 // Currency endpoints
 getDealList: (partyITypeRef: string): Promise<ApiResponse> => {
   const queryParams = new URLSearchParams({
@@ -74,8 +70,6 @@ getDealList: (partyITypeRef: string): Promise<ApiResponse> => {
 },
 
 
-
-
   getBranchesList: (): Promise<ApiResponse> => {
     const queryParams = new URLSearchParams({
       User_ID: API_CREDENTIALS.userId,
@@ -86,9 +80,6 @@ getDealList: (partyITypeRef: string): Promise<ApiResponse> => {
 
        return ApiClient.get(`${ENDPOINTS.NETWORK_BRANCHES.GET_BRANCHES}?${queryParams.toString()}`);
   },
-
-
-
 
 
   // Currency endpoints
@@ -118,6 +109,85 @@ getDealList: (partyITypeRef: string): Promise<ApiResponse> => {
     return ApiClient.get(`${ENDPOINTS.PURPOSES}?${queryParams.toString()}`);
   },
 
+
+    getCountryNames: (): Promise<ApiResponse> => {
+    const queryParams = new URLSearchParams({
+      User_ID: API_CREDENTIALS.userId,
+      User_Password: API_CREDENTIALS.userPassword,
+      Auth_Token: API_CREDENTIALS.authToken,
+      Customer_Code: API_CREDENTIALS.customerCode,
+    });
+
+    return ApiClient.get(`${ENDPOINTS.GET_COUNTRIES}?${queryParams.toString()}`);
+  },
+
+    getProvience: (Country: string): Promise<ApiResponse> => {
+    const queryParams = new URLSearchParams({
+      User_ID: API_CREDENTIALS.userId,
+      User_Password: API_CREDENTIALS.userPassword,
+      Auth_Token: API_CREDENTIALS.authToken,
+      Customer_Code: API_CREDENTIALS.customerCode,
+      Country: Country,
+    });
+
+    return ApiClient.get(`${ENDPOINTS.GET_PROVINCES}?${queryParams.toString()}`);
+  },
+
+  
+    getOccupation: (): Promise<ApiResponse> => {
+    const queryParams = new URLSearchParams({
+      User_ID: API_CREDENTIALS.userId,
+      User_Password: API_CREDENTIALS.userPassword,
+      Auth_Token: API_CREDENTIALS.authToken,
+      Customer_Code: API_CREDENTIALS.customerCode,
+    });
+
+    return ApiClient.get(`${ENDPOINTS.GET_OCCUPATION}?${queryParams.toString()}`);
+  },
+
+
+    // Add this new method for multipart file upload
+  uploadDocument: async (
+   cTypeRef: string,
+    imageUri: string
+  ): Promise<ApiResponse> => {
+    // Create form data
+    const formData = new FormData();
+
+    // Add text fields
+ formData.append('User_ID', API_CREDENTIALS.userId);
+    formData.append('User_Password', API_CREDENTIALS.userPassword);
+    formData.append('Auth_Token', API_CREDENTIALS.authToken);
+    formData.append('Customer_Code', API_CREDENTIALS.customerCode);
+    formData.append('C_ITypeRef', cTypeRef);
+
+    // Get file name from URI
+    let fileName = imageUri.split('/').pop();
+    if (!fileName) {
+      fileName = `document_${Date.now()}.jpg`;
+    }
+
+    // Determine file type
+    let fileType = 'image/jpeg';
+    if (fileName.toLowerCase().endsWith('.png')) {
+      fileType = 'image/png';
+    }
+
+    // Add image file
+    formData.append('Image', {
+      uri: imageUri,
+      name: fileName,
+      type: fileType,
+    } as any); // Type assertion needed for React Native FormData
+
+    // Make the request with proper headers
+    return ApiClient.post(ENDPOINTS.UPLOAD_DOCUMENT, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  }
+,
 
 
   // User endpoints

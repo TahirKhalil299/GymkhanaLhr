@@ -164,11 +164,24 @@ const BookDealScreen: React.FC = () => {
     setShowAlert(true);
   };
 
-  const handleConfirm = () => {
-    setShowAlert(false);
-    console.log("Deal confirmed successfully!");
-    router.push("/SelectBranch");
+const handleConfirm = () => {
+  setShowAlert(false);
+  
+  // Convert boolean to string
+  const dealData = {
+    fromValue: `${amount} ${selectedCurrency?.currency}`,
+    toValue: `${convertedAmount} PKR`,
+    rateValue: activeTab === "buy" 
+      ? selectedCurrency?.buyRate.toFixed(2) 
+      : selectedCurrency?.sellRate.toFixed(2),
+    isBuy: activeTab === "buy" ? "true" : "false" // Convert boolean to string
   };
+
+  router.push({
+    pathname: "/SelectBranch",
+    params: dealData
+  });
+};
 
   const handleCancel = () => {
     setShowAlert(false);

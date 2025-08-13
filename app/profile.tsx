@@ -15,8 +15,10 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
-
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import AuthService from '../src/api/AuthService';
+import { ApiListener } from '../src/api/ServiceProvider';
+import { UserDataManager } from '../utils/userDataManager';
 
 // Define types for dropdown items
 type DropdownItem = {
@@ -35,6 +37,27 @@ type CountryItem = {
 
 type ProvinceItem = {
   Province: string;
+};
+
+type UserData = {
+  C_User_ID: string;
+  C_Email: string;
+  C_Title: string;
+  C_Name: string;
+  C_FName: string;
+  C_Add1: string;
+  C_City: string;
+  C_Province: string;
+  C_Country: string;
+  C_Tel_Mobile: string;
+  C_Gender: string;
+  C_Nationality: string;
+  C_Occupation_Cat: string;
+  C_Occupation: string;
+  C_DOB: string;
+  C_ITypeRef: string;
+  C_IType_Expiry: string;
+  Img_D: string;
 };
 
 const Profile = () => {
@@ -98,30 +121,126 @@ const Profile = () => {
   const [showImagePreview, setShowImagePreview] = useState(false);
   const [previewImage, setPreviewImage] = useState('');
 
-  // Initialize data (similar to your Android onCreate/onViewCreated)
+  // Fetch user data on component mount
   useEffect(() => {
-    // Mock API calls - replace with your actual API calls
+    fetchUserData();
     fetchOccupations();
     fetchCountries();
-    // Load user data from preferences
-    loadUserData();
   }, []);
 
-  const loadUserData = () => {
-    // Mock user data - replace with your actual preference manager logic
-    setFormData(prev => ({
-      ...prev,
-      userId: '12345',
-      email: 'user@example.com',
-      mobileNo: '03001234567',
-      cnicNo: '1234567890123',
-      nationality: 'Pakistan'
-    }));
+const fetchUserData = async () => {
+  setIsLoading(true);
+  
+  try {
+    // Get stored credentials using the correct method name
+    const credentials = await UserDataManager.getSavedCredentials();
+    
+    // Check if credentials exist and are complete
+    if (!credentials || !credentials.userId || !credentials.password) {
+      Alert.alert('Error', 'User credentials not found. Please login again.');
+      router.replace('/login');
+      return;
+    }
+
+    console.log('Using saved credentials for user data fetch - userId:', credentials.userId);
+
+    const listener: ApiListener = {
+      onRequestStarted: () => {
+        console.log("User data request started");
+      },
+      onRequestSuccess: async (response, data, tag) => {
+        try {
+          const responseData = JSON.parse(data);
+          console.log('User data response:', responseData);
+          
+          if (responseData.StatusCode === "00" && responseData.data) {
+            const userData: UserData = responseData.data;
+            updateFormData(userData);
+            
+            // Set CNIC image if available
+            if (userData.Img_D && userData.Img_D.startsWith('data:image')) {
+              setBase64Image(userData.Img_D.split(',')[1]);
+            }
+            
+            console.log('User data updated successfully');
+          } else {
+            console.log('Invalid response or no data:', responseData);
+            Alert.alert('Error', responseData.StatusDesc || 'No user data found');
+          }
+        } catch (error) {
+          console.error('Error processing user data:', error);
+          Alert.alert('Error', 'Failed to process user data');
+        }
+      },
+      onRequestFailure: (error, message, errors, tag) => {
+        console.log('User data request failed:', message);
+        Alert.alert('Error', message || 'Failed to fetch user data');
+      },
+      onRequestEnded: () => {
+        console.log('User data request ended');
+        setIsLoading(false);
+      },
+      onError: (response, message, tag) => {
+        console.log('User data request error:', message);
+        Alert.alert('Error', message || 'Error fetching user data');
+        setIsLoading(false);
+      }
+    };
+
+    // Use the saved credentials for login/authentication
+    const authService = new AuthService();
+    await authService.login(credentials.userId, credentials.password, listener);
+    
+  } catch (error) {
+    console.error('Error fetching user data:', error);
+    Alert.alert('Error', 'An unexpected error occurred while fetching user data');
+    setIsLoading(false);
+  }
+};
+
+  const updateFormData = (userData: UserData) => {
+    // Parse date strings (assuming format like "7/10/2007 12:00:00 AM")
+    const parseDate = (dateStr: string) => {
+      if (!dateStr) return '';
+      const datePart = dateStr.split(' ')[0]; // Get just the date part
+      const [month, day, year] = datePart.split('/');
+      return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
+    };
+
+    setFormData({
+      userId: userData.C_User_ID || '',
+      email: userData.C_Email || '',
+      title: userData.C_Title || '',
+      fullName: userData.C_Name || '',
+      fatherName: userData.C_FName || '',
+      gender: userData.C_Gender === '1' ? 'Female' : userData.C_Gender === '2' ? 'Male' : 'Other',
+      cnicNo: userData.C_ITypeRef || '',
+      cnicExpiry: parseDate(userData.C_IType_Expiry) || '',
+      mobileNo: userData.C_Tel_Mobile || '',
+      dateOfBirth: parseDate(userData.C_DOB) || '',
+      occupation: userData.C_Occupation || '',
+      occupationDetails: '',
+      nationality: userData.C_Nationality || 'Pakistan',
+      countryOfStay: userData.C_Country || '',
+      province: userData.C_Province || '',
+      cityOfStay: userData.C_City || '',
+      address: userData.C_Add1 || ''
+    });
+
+    // Set selected IDs
+    setTitleId(userData.C_Title || '');
+    setGenderId(userData.C_Gender || '');
+    setOccupationId(userData.C_Occupation_Cat || '');
+    
+    // Fetch provinces if country is set
+    if (userData.C_Country) {
+      fetchProvinces(userData.C_Country);
+    }
   };
 
   const fetchOccupations = () => {
     setIsLoading(true);
-    // Mock API call
+    // Mock API call - replace with actual API call if available
     setTimeout(() => {
       setOccupationsList([
         { CatID: '1', CatDesc: 'Business' },
@@ -130,12 +249,12 @@ const Profile = () => {
         { CatID: '4', CatDesc: 'Other' }
       ]);
       setIsLoading(false);
-    }, 1000);
+    }, 500);
   };
 
   const fetchCountries = () => {
     setIsLoading(true);
-    // Mock API call
+    // Mock API call - replace with actual API call if available
     setTimeout(() => {
       setCountriesList([
         { Country: 'Pakistan' },
@@ -144,7 +263,7 @@ const Profile = () => {
         { Country: 'Canada' }
       ]);
       setIsLoading(false);
-    }, 1000);
+    }, 500);
   };
 
   const fetchProvinces = (country: string) => {
@@ -162,7 +281,7 @@ const Profile = () => {
         setProvincesList([]);
       }
       setIsLoading(false);
-    }, 1000);
+    }, 500);
   };
 
   const handleBack = () => {
@@ -174,6 +293,7 @@ const Profile = () => {
       // Submit logic here
       console.log('Form submitted:', formData);
       // Call your API to update profile
+      Alert.alert('Success', 'Profile updated successfully');
     }
   };
 
@@ -284,7 +404,6 @@ const Profile = () => {
       if (manipResult.base64) {
         setSelectedImage(manipResult.uri);
         setBase64Image(manipResult.base64);
-        // Update UI to show success state
       }
     }
   };
@@ -327,7 +446,6 @@ const Profile = () => {
       if (manipResult.base64) {
         setSelectedImage(manipResult.uri);
         setBase64Image(manipResult.base64);
-        // Update UI to show success state
       }
     }
   };
@@ -428,8 +546,6 @@ const Profile = () => {
       isValid = false;
     }
 
-    // You can set these errors to state to display them in the UI
-    // For simplicity, we're just using alerts here
     if (!isValid) {
       alert('Please fill all required fields correctly');
     }

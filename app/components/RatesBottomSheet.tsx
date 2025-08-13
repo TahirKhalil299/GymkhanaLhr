@@ -32,6 +32,10 @@ const RatesBottomSheet = forwardRef<RatesBottomSheetRef, RatesBottomSheetProps>(
     const [searchQuery, setSearchQuery] = useState('');
     const [filteredRates, setFilteredRates] = useState<Rate[]>(rates);
 
+
+
+    
+
     useEffect(() => {
       if (rates && rates.length > 0) {
         setFilteredRates(rates);

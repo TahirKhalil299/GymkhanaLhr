@@ -89,6 +89,37 @@ getDealList: (partyITypeRef: string): Promise<ApiResponse> => {
 
 
 
+
+
+  // Currency endpoints
+  getBranchesName: (): Promise<ApiResponse> => {
+    const queryParams = new URLSearchParams({
+      User_ID: API_CREDENTIALS.userId,
+      User_Password: API_CREDENTIALS.userPassword,
+      Auth_Token: API_CREDENTIALS.authToken,
+      Customer_Code: API_CREDENTIALS.customerCode,
+    });
+
+    return ApiClient.get(`${ENDPOINTS.BRANCHES}?${queryParams.toString()}`);
+  },
+
+
+    getPurposeList: (cStatus: string,roType: string,cType: string): Promise<ApiResponse> => {
+    const queryParams = new URLSearchParams({
+      User_ID: API_CREDENTIALS.userId,
+      User_Password: API_CREDENTIALS.userPassword,
+      Auth_Token: API_CREDENTIALS.authToken,
+      Customer_Code: API_CREDENTIALS.customerCode,
+      CStatus: cStatus,
+      ROType: roType,
+      CType: cType
+    });
+
+    return ApiClient.get(`${ENDPOINTS.PURPOSES}?${queryParams.toString()}`);
+  },
+
+
+
   // User endpoints
   getUserProfile: (): Promise<ApiResponse<UserProfile>> => 
     ApiClient.get(ENDPOINTS.USER.PROFILE),

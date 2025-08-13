@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Dimensions,
@@ -28,52 +28,78 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingCredentials, setIsLoadingCredentials] = useState(true);
   const [alertDialog, setAlertDialog] = useState({
     visible: false,
     title: "",
     message: "",
   });
 
-   const getLogoSource = () => {
-      switch (API_CREDENTIALS.currencyExchangeName) {
-        case API_CREDENTIALS.EXCHANGE_NAMES.BANK_OF_PUNJAB:
-          return require('../assets/images/logo_bopex.png');
-        case API_CREDENTIALS.EXCHANGE_NAMES.ALLIED:
-          return require('../assets/images/logo_allied_2.png');
-        case API_CREDENTIALS.EXCHANGE_NAMES.ASKARI:
-          return require('../assets/images/logo_askari.png');
-        case API_CREDENTIALS.EXCHANGE_NAMES.AL_HABIB:
-          return require('../assets/images/logo_al_habib.png');
-        case API_CREDENTIALS.EXCHANGE_NAMES.FAYSAL:
-          return require('../assets/images/logo_faysal.png');
-        case API_CREDENTIALS.EXCHANGE_NAMES.HABIB_QATAR:
-          return require('../assets/images/logo_habib_qatar.png');
-        case API_CREDENTIALS.EXCHANGE_NAMES.LINK:
-          return require('../assets/images/logo_link.png');
-        case API_CREDENTIALS.EXCHANGE_NAMES.MCB:
-          return require('../assets/images/logo_mcb.png');
-        case API_CREDENTIALS.EXCHANGE_NAMES.MEEZAN:
-          return require('../assets/images/logo_meezan.png');
-        case API_CREDENTIALS.EXCHANGE_NAMES.SADIQ:
-          return require('../assets/images/logo_sadiq.png');
-        case API_CREDENTIALS.EXCHANGE_NAMES.UNION:
-          return require('../assets/images/logo_union.png');
-        case API_CREDENTIALS.EXCHANGE_NAMES.ZEEQUE:
-          return require('../assets/images/logo_zeeque.png');
-        case API_CREDENTIALS.EXCHANGE_NAMES.RECL:
-          return require('../assets/images/logo_recl.png');
-        case API_CREDENTIALS.EXCHANGE_NAMES.TECL:
-          return require('../assets/images/logo_tecl.png');
-        case API_CREDENTIALS.EXCHANGE_NAMES.DEMO:
-          return require('../assets/images/logo_demo.png');
-        default:
-          return require('../assets/images/logo.png');
-      }
-    };
-
-  
   const router = useRouter();
   const insets = useSafeAreaInsets();
+
+  // Load saved credentials on component mount
+  useEffect(() => {
+    loadSavedCredentials();
+  }, []);
+
+  const loadSavedCredentials = async () => {
+    try {
+      setIsLoadingCredentials(true);
+      console.log('Loading saved credentials...');
+      
+      const credentials = await UserDataManager.getSavedCredentials();
+      
+      if (credentials.userId && credentials.password) {
+        console.log('Found saved credentials, pre-filling form');
+        setUserId(credentials.userId);
+        setPassword(credentials.password);
+      } else {
+        console.log('No saved credentials found');
+      }
+    } catch (error) {
+      console.error("Error loading saved credentials:", error);
+    } finally {
+      setIsLoadingCredentials(false);
+    }
+  };
+
+  const getLogoSource = () => {
+    switch (API_CREDENTIALS.currencyExchangeName) {
+      case API_CREDENTIALS.EXCHANGE_NAMES.BANK_OF_PUNJAB:
+        return require('../assets/images/logo_bopex.png');
+      case API_CREDENTIALS.EXCHANGE_NAMES.ALLIED:
+        return require('../assets/images/logo_allied_2.png');
+      case API_CREDENTIALS.EXCHANGE_NAMES.ASKARI:
+        return require('../assets/images/logo_askari.png');
+      case API_CREDENTIALS.EXCHANGE_NAMES.AL_HABIB:
+        return require('../assets/images/logo_al_habib.png');
+      case API_CREDENTIALS.EXCHANGE_NAMES.FAYSAL:
+        return require('../assets/images/logo_faysal.png');
+      case API_CREDENTIALS.EXCHANGE_NAMES.HABIB_QATAR:
+        return require('../assets/images/logo_habib_qatar.png');
+      case API_CREDENTIALS.EXCHANGE_NAMES.LINK:
+        return require('../assets/images/logo_link.png');
+      case API_CREDENTIALS.EXCHANGE_NAMES.MCB:
+        return require('../assets/images/logo_mcb.png');
+      case API_CREDENTIALS.EXCHANGE_NAMES.MEEZAN:
+        return require('../assets/images/logo_meezan.png');
+      case API_CREDENTIALS.EXCHANGE_NAMES.SADIQ:
+        return require('../assets/images/logo_sadiq.png');
+      case API_CREDENTIALS.EXCHANGE_NAMES.UNION:
+        return require('../assets/images/logo_union.png');
+      case API_CREDENTIALS.EXCHANGE_NAMES.ZEEQUE:
+        return require('../assets/images/logo_zeeque.png');
+      case API_CREDENTIALS.EXCHANGE_NAMES.RECL:
+        return require('../assets/images/logo_recl.png');
+      case API_CREDENTIALS.EXCHANGE_NAMES.TECL:
+        return require('../assets/images/logo_tecl.png');
+      case API_CREDENTIALS.EXCHANGE_NAMES.DEMO:
+        return require('../assets/images/logo_demo.png');
+      default:
+        return require('../assets/images/logo.png');
+    }
+  };
 
   const showStatusDialog = (message: string) => {
     setAlertDialog({
@@ -129,6 +155,16 @@ export default function LoginScreen() {
           // Check if StatusDesc is Success
           if (loginResponse.isSuccess()) {
             console.log("Login successful, storing data...");
+
+            // Save user credentials for future auto-login (FIRST PRIORITY)
+            console.log("Saving user credentials...");
+            try {
+              await UserDataManager.saveUserCredentials(userId.trim(), password);
+              console.log("User credentials saved successfully");
+            } catch (credError) {
+              console.error("Error saving user credentials:", credError);
+              // Don't fail the login process if credential saving fails
+            }
 
             // Store user data if available
             const userData = loginResponse.getUserData();
@@ -214,6 +250,20 @@ export default function LoginScreen() {
     }
   };
 
+  // Show loading indicator while credentials are being loaded
+  if (isLoadingCredentials) {
+    return (
+      <View
+        className="flex-1 bg-white justify-center items-center"
+        style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
+      >
+        <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+        <ActivityIndicator size="large" color={AppColors.button_background} />
+        <Text className="text-gray-600 mt-4">Loading...</Text>
+      </View>
+    );
+  }
+
   return (
     <View
       className="flex-1 bg-white"
@@ -232,15 +282,15 @@ export default function LoginScreen() {
         keyboardShouldPersistTaps="handled"
         bounces={false}
       >
-  {/* Logo Section */}
-<View className="items-center mb-10">
-  <Image
-    source={getLogoSource()}
-    className="mb-2.5"
-    style={{ width: 200, height: 100 }}
-    resizeMode="contain"
-  />
-</View>
+        {/* Logo Section */}
+        <View className="items-center mb-10">
+          <Image
+            source={getLogoSource()}
+            className="mb-2.5"
+            style={{ width: 200, height: 100 }}
+            resizeMode="contain"
+          />
+        </View>
 
         {/* Welcome Text Section */}
         <View className="mb-10">
@@ -248,7 +298,6 @@ export default function LoginScreen() {
           <Text className="text-2xl font-bold text-black">Log In</Text>
         </View>
 
-        {/* Input Fields */}
         {/* Input Fields */}
         <View className="mb-7.5">
           {/* User ID Input */}
@@ -298,20 +347,19 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </View>
         </View>
-   
-   {/* Login Button */}
-<TouchableOpacity 
-  className={`${isLoading ? 'bg-button_text' : 'bg-button_background'} rounded-lg py-2.5 px-5 items-center mb-5`}
-  onPress={handleLogin}
-  disabled={isLoading}
->
-  {isLoading ? (
-    <ActivityIndicator color={AppColors.button_text} size="small" />
-  ) : (
-    <Text className="text-button_text text-base font-bold">Log In</Text>
-  )}
-</TouchableOpacity>
 
+        {/* Login Button */}
+        <TouchableOpacity 
+          className={`${isLoading ? 'bg-button_text' : 'bg-button_background'} rounded-lg py-2.5 px-5 items-center mb-5`}
+          onPress={handleLogin}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <ActivityIndicator color={AppColors.button_text} size="small" />
+          ) : (
+            <Text className="text-button_text text-base font-bold">Log In</Text>
+          )}
+        </TouchableOpacity>
 
         {/* Forgot Password */}
         <TouchableOpacity className="items-end" disabled={isLoading}>

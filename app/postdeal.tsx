@@ -1,5 +1,5 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
   Platform,
@@ -15,15 +15,26 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 const PostDeal = () => {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  
-  // State for form fields
-  const [branchCode, setBranchCode] = useState('25');
-  const [branchName, setBranchName] = useState('Faisal Town Lahore');
-  const [branchCity, setBranchCity] = useState('Lahore');
-  const [dealMode, setDealMode] = useState('Buy');
-  const [currency, setCurrency] = useState('GBP');
-  const [rate, setRate] = useState('367.20');
-  const [amount, setAmount] = useState('45.00');
+  const params = useLocalSearchParams<{
+    from_value?: string;
+    to_value?: string;
+    rate_value?: string;
+    is_buy?: string;
+    purpose_id?: string;
+    purpose_name?: string;
+    branch_code?: string;
+    branch_name?: string;
+    branch_city?: string;
+  }>();
+
+  // State for form fields initialized with received params
+  const [branchCode, setBranchCode] = useState(params.branch_code || '');
+  const [branchName, setBranchName] = useState(params.branch_name || '');
+  const [branchCity, setBranchCity] = useState(params.branch_city || '');
+  const [dealMode, setDealMode] = useState(params.is_buy === 'true' ? 'Buy' : 'Sell');
+  const [currency, setCurrency] = useState(''); // Default currency
+  const [rate, setRate] = useState(params.rate_value || '');
+  const [amount, setAmount] = useState(params.from_value || '');
   
   // Date picker state
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -59,12 +70,18 @@ const PostDeal = () => {
       date: selectedDate,
       currency,
       rate,
-      amount
+      amount,
+      convertedAmount: convertedAmount,
+      purposeId: params.purpose_id,
+      purposeName: params.purpose_name
     });
+    
+    // Navigate to confirmation screen or perform API call
+    // router.push('/confirmation');
   };
   
   // Calculate converted amount
-  const convertedAmount = (parseFloat(amount) * parseFloat(rate)).toFixed(2);
+  const convertedAmount = (parseFloat(amount || '0') * parseFloat(rate || '0')).toFixed(2);
 
   return (
     <View className="flex-1 bg-gray-100" style={{ paddingTop: insets.top }}>
@@ -78,49 +95,34 @@ const PostDeal = () => {
       </View>
       
       {/* Progress Indicator */}
-      
-       <View className="px-5 py-5">
-              {/* Progress indicator with circles and full connecting lines */}
-              <View className="flex-row items-center mb-4">
-                {/* First circle (filled) */}
-                <View className="w-4 h-4 rounded-full bg-button_background" />
-      
-                {/* Full connecting line */}
-                <View className="flex-1 h-1 bg-button_background mx-1" />
-      
-                {/* Second circle (outline) */}
-                <View className="w-4 h-4 rounded-full bg-button_background" />
-                {/* Full connecting line */}
-                <View className="flex-1 h-1 bg-button_background mx-1" />
-      
-                {/* Third circle (outline) */}
-                <View className="w-4 h-4 rounded-full bg-white border-2 border-button_background" />
-      
-           
-      
-                
-              </View>
-      
-              {/* Text labels - unchanged */}
-              <View className="flex-row justify-between">
-                <View className="items-center">
-                  <Text className="text-sm text-gray-600 mb-1">From</Text>
-                  <Text className="text-sm font-semibold text-gray-800">
-                    45.00 USD
-                  </Text>
-                </View>
-                <View className="items-center">
-                  <Text className="text-sm text-gray-600 mb-1">To</Text>
-                  <Text className="text-sm font-semibold text-gray-800">
-                    12568.75 PKR
-                  </Text>
-                </View>
-                <View className="items-center">
-                  <Text className="text-sm text-gray-600 mb-1">Rate</Text>
-                  <Text className="text-sm font-semibold text-gray-800">279.75</Text>
-                </View>
-              </View>
-            </View>
+      <View className="px-5 py-5">
+        <View className="flex-row items-center mb-4">
+          <View className="w-4 h-4 rounded-full bg-button_background" />
+          <View className="flex-1 h-1 bg-button_background mx-1" />
+          <View className="w-4 h-4 rounded-full bg-button_background" />
+          <View className="flex-1 h-1 bg-button_background mx-1" />
+          <View className="w-4 h-4 rounded-full bg-white border-2 border-button_background" />
+        </View>
+
+        <View className="flex-row justify-between">
+          <View className="items-center">
+            <Text className="text-sm text-gray-600 mb-1">From</Text>
+            <Text className="text-sm font-semibold text-gray-800">
+              {amount} {currency}
+            </Text>
+          </View>
+          <View className="items-center">
+            <Text className="text-sm text-gray-600 mb-1">To</Text>
+            <Text className="text-sm font-semibold text-gray-800">
+              {convertedAmount} PKR
+            </Text>
+          </View>
+          <View className="items-center">
+            <Text className="text-sm text-gray-600 mb-1">Rate</Text>
+            <Text className="text-sm font-semibold text-gray-800">{rate}</Text>
+          </View>
+        </View>
+      </View>
 
       <ScrollView className="flex-1 px-4" showsVerticalScrollIndicator={false}>
         {/* Branch Code */}
@@ -131,6 +133,7 @@ const PostDeal = () => {
             value={branchCode}
             onChangeText={setBranchCode}
             placeholder="Enter branch code"
+            editable={false} // Make it read-only since it comes from previous screen
           />
         </View>
 
@@ -142,6 +145,7 @@ const PostDeal = () => {
             value={branchName}
             onChangeText={setBranchName}
             placeholder="Enter branch name"
+            editable={false}
           />
         </View>
 
@@ -153,6 +157,7 @@ const PostDeal = () => {
             value={branchCity}
             onChangeText={setBranchCity}
             placeholder="Enter branch city"
+            editable={false}
           />
         </View>
 
@@ -164,6 +169,7 @@ const PostDeal = () => {
             value={dealMode}
             onChangeText={setDealMode}
             placeholder="Enter deal mode"
+            editable={false}
           />
         </View>
 
